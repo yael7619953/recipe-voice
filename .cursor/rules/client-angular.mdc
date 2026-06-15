@@ -1,0 +1,49 @@
+---
+description: Angular 21 conventions for client/
+globs: client/**/*
+alwaysApply: false
+---
+
+# Client — Angular App
+
+## Layout
+
+```text
+app.ts / app.config.ts / app.routes.ts   → app entry (avoid parallel edits)
+core/      → guards, interceptors, services, models
+features/  → lazy-loaded areas (auth, recipes, cooking, ai-import, categories)
+shared/    → reusable components, pipes, directives
+```
+
+## Conventions
+
+- **Standalone components only** — no NgModules. App-wide providers in `app.config.ts`.
+- **Lazy load** every feature via `loadChildren` in `app.routes.ts`.
+- **i18n:** route all user-facing strings through ngx-translate — no hardcoded text.
+- **RTL/LTR:** use logical CSS (`margin-inline`, `padding-inline`, `text-align: start/end`).
+- **Prettier:** `printWidth: 100`, `singleQuote: true`.
+
+## Example — logical CSS for RTL
+
+```scss
+// ✅ GOOD
+.card {
+  margin-inline-start: 1rem;
+  text-align: start;
+}
+
+// ❌ BAD — breaks in RTL
+.card {
+  margin-left: 1rem;
+  text-align: left;
+}
+```
+
+## Commands
+
+```bash
+cd client && npm start        # http://localhost:4200
+cd client && npm run build && npm test
+```
+
+Run build and tests before proposing a merge.

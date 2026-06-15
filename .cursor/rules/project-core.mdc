@@ -1,0 +1,36 @@
+---
+description: Core project conventions, security, and git workflow
+alwaysApply: true
+---
+
+# Recipe App — Core Rules
+
+Recipe platform with voice kitchen assistant (TTS + STT) and AI recipe import.
+
+## Stack
+
+- **Server:** Node.js, Express 5, Mongoose 9, MongoDB (ES Modules)
+- **Client:** Angular 21 standalone, ngx-translate (Hebrew RTL + English LTR)
+- **Auth:** JWT + bcrypt + Google OAuth
+
+## Security
+
+- Protect routes with `auth.middleware`; set `req.userId` from JWT.
+- **Always filter user-owned data by `userId`** — never return another user's recipes/categories.
+- Never commit secrets (`.env`, API keys). Use `server/.env` locally and GitHub Secrets in CI.
+
+## Code Style
+
+- Comments: **English only**, and only for non-obvious intent.
+- Add dependencies via the package manager — do not hand-edit `package.json` versions.
+- Avoid editing shared entry files (`app.js`, `app.routes.ts`, `app.config.ts`) from parallel branches.
+
+## Git
+
+- Flow: `main` ← `develop` ← `feature/*`; merge to `develop` via PR with green CI.
+- **Conventional Commits:** `type(scope): subject` — e.g. `feat(auth): add Google OAuth callback`.
+- Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`.
+
+## API Contracts
+
+When changing endpoints, update `CONTRACTS.md` to match request/response shapes.
