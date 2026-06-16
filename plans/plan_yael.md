@@ -90,7 +90,11 @@
 - **⏸️ ממתינה ל:** אין — עצמאי (לסיים מוקדם ככל האפשר!).
 - **MERGE שלי:** M1, ~11:00
 - **⚠️ קריטי — לסיים מוקדם:** Shira ממתינה ל-M1 לפני M2, ויש לה רק ~4 שעות (M1 ~11:00 → M2 ~15:00) לכל ליבת ה-Auth בשרת. כל עיכוב ב-M1 דוחף את כל לוח היום של שתינו — זו המשימה בעדיפות עליונה בבוקר.
-- תוכן: `npm install` לכל התלות החסרות (server: `jsonwebtoken`, `bcrypt`, `multer`, `passport`/Google OAuth, Voice/LLM; client: `@ngx-translate/core`, `@ngx-translate/http-loader`) · `server/.env.example` (`MONGO_URI`, `JWT_SECRET`, מפתחות Google ו-LLM) · `server/routes/index.js` (aggregator) · `error.middleware.js` · `upload.middleware.js` (multer ל-PDF/תמונה/אודיו) · חיבור ב-`app.js` (עריכה מבודדת) · תשתית לקוח: `app.config.ts` (`provideHttpClient` + `provideTranslate`), שלד `assets/i18n/he.json`+`en.json` ריקים, מבנה `core/` ו-`features/`.
+- תוכן: `npm install` לכל התלות החסרות (server: `jsonwebtoken`, `bcrypt`, `multer`, `passport`/Google OAuth, Voice/LLM; client: `@ngx-translate/core`, `@ngx-translate/http-loader`) · 
+`server/.env.example` (`MONGO_URI`, `JWT_SECRET`, מפתחות Google ו-LLM) · 
+`server/routes/index.js` (aggregator) · `error.middleware.js` · `upload.middleware.js` (multer ל-PDF/תמונה/אודיו) ·
+ חיבור ב-`app.js` (עריכה מבודדת) ·
+ תשתית לקוח: `app.config.ts` (`provideHttpClient` + `provideTranslate`), שלד `assets/i18n/he.json`+`en.json` ריקים, מבנה `core/` ו-`features/`.
 
 ### משימה B — Google OAuth (שרת)
 - **ענף Git:** `feature/auth-google-oauth`
