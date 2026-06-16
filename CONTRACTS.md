@@ -535,7 +535,6 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 ```json
 {
   "userId": "664a00000000000000000001",
-  "email": "yael@example.com",
   "iat": 1718445600,
   "exp": 1719050400
 }
@@ -549,3 +548,4 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | ---- | ------ |
 | 2026-06-15 | Initial contract document (pre-implementation) |
 | 2026-06-15 | Removed AI Import and Voice→AI pipeline sections |
+| 2026-06-16 | Fix JWT payload — `email` claim was never signed; payload is `{ userId, iat, exp }` only |
