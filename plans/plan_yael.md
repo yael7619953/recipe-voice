@@ -157,7 +157,9 @@
 - **ענף Git:** `feature/ci-cd`
 - **⏸️ ממתינה ל:** כל פיצ'רי השרת מוזגו ל-`develop`.
 - **MERGE שלי:** M18, ~18:00
-- תוכן: `.github/workflows/ci.yml` — job ה-**server** (ESLint + `npm ci` + Jest/Vitest + supertest + `mongodb-memory-server`); Shira על job ה-**client** (M17) · שלד `deploy.yml` (Render/Railway) + הזרקת secrets · מיזוג סופי ל-`develop`, בדיקת CI ירוק.
+- תוכן: השלמת `.github/workflows/ci.yml` — **הוספת** lint + Jest/Vitest + supertest + `mongodb-memory-server` ל-job `server-build` **שכבר קיים** (ה-skeleton הוקם מראש על-ידי Shira — ראו הערה). שלד `deploy.yml` (Render/Railway) + הזרקת secrets · מיזוג סופי ל-`develop`, בדיקת CI ירוק.
+
+> **הערה:** Shira הקימה את תשתית ה-CI המינימלית לפני יום 1 (`server-build`: `npm ci`; `client-build`: `npm ci` + `ng build`). ב-M18 רק מרחיבים את job השרת עם טסטים ו-ESLint.
 
 **Deliverable:** הקראת שלבים + טיימרים פעילים במצב בישול + wizard ל-AI Import עובד + CI server ירוק.
 
