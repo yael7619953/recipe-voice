@@ -74,6 +74,7 @@ Google OAuth keys, and LLM keys. **Never commit secrets** — use `.env` / GitHu
   - `fix(recipes): correct userId filter on list endpoint`
   - `chore(ci): add server test job`
 - Common types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`.
+- **Commit message style:** subject line uses present tense and describes *what* was added/changed. Optional body explains *why* or lists key details. Never include internal task numbers, milestone labels, or step counters — keep messages professional and self-contained.
 
 ## Agent Rules
 
@@ -81,3 +82,19 @@ Google OAuth keys, and LLM keys. **Never commit secrets** — use `.env` / GitHu
   from multiple branches in parallel.
 - Add new dependencies via the package manager (do not hand-edit `package.json` versions).
 - Run lint/build/tests before proposing a merge.
+- **Server errors:** always `throw new AppError(message, statusCode)` — the `errorHandler` in
+  `error.middleware.js` maps it to the correct HTTP response. Never throw a plain `Error` for
+  expected HTTP errors (4xx).
+- **New router:** export from its own `*.routes.js` and register in `routes/index.js`. Never
+  add `app.use(...)` directly in `app.js`.
+- **Uploads:** import from `upload.middleware.js` — use `uploadPdf`, `uploadImage`,
+  `uploadAudio`, or `uploadMedia` as route-level middleware. Field name for audio uploads is
+  `audio`; for all other file types it is `file`.
+- **Client auth state:** `TokenStorageService` owns localStorage (token + user). `AuthService`
+  wraps it with Angular signals. Never read `localStorage` for auth data outside these two
+  services.
+- **Shared branch `feature/ai-import`:** Shira owns `ai.service.js` / `ai.controller.js` /
+  `ai.routes.js`; Yael owns `voice.service.js` / `voice.controller.js` / `voice.routes.js` +
+  the import wizard in the client. Do not edit the other person's files on this branch.
+- **CONTRACTS.md:** when adding or changing an endpoint, update the relevant section and
+  append a row to the Changelog table at the bottom of the file.

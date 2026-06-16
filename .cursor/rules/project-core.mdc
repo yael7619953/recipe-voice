@@ -19,6 +19,12 @@ Recipe platform with voice kitchen assistant (TTS + STT) and AI recipe import.
 - **Always filter user-owned data by `userId`** — never return another user's recipes/categories.
 - Never commit secrets (`.env`, API keys). Use `server/.env` locally and GitHub Secrets in CI.
 
+## Server Patterns
+
+- **Errors:** `throw new AppError(message, statusCode)` (from `error.middleware.js`) — never throw a plain `Error` in services. The `errorHandler` maps it to the correct HTTP response automatically.
+- **Routes:** register every new router in `routes/index.js`; never mount directly in `app.js`.
+- **Uploads:** use the ready-made exports from `upload.middleware.js` (`uploadPdf`, `uploadImage`, `uploadAudio`, `uploadMedia`). Do not create a new multer instance.
+
 ## Code Style
 
 - Comments: **English only**, and only for non-obvious intent.
@@ -33,4 +39,4 @@ Recipe platform with voice kitchen assistant (TTS + STT) and AI recipe import.
 
 ## API Contracts
 
-When changing endpoints, update `CONTRACTS.md` to match request/response shapes.
+When changing endpoints, update the relevant section in `CONTRACTS.md` **and** append a row to its Changelog table.
