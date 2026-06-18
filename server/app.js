@@ -5,7 +5,8 @@ import connectDB from './config/db.js';
 import routes from './routes/index.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
-const app = express();const PORT = process.env.PORT || 5000;
+const app = express();
+const PORT = process.env.PORT || 5000;
 
 connectDB();
 
