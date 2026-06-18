@@ -370,8 +370,20 @@ List recipes for the authenticated user.
 | `category` | string | Filter by category `_id` |
 | `favorite` | boolean | When `true`, only favorites |
 | `q` | string | Optional title search (case-insensitive) |
+| `page` | number | Page number (default `1`, minimum `1`) |
+| `limit` | number | Items per page (default `20`, maximum `20`) |
 
-**Response `200`:** `Recipe[]`
+**Response `200`:**
+
+```typescript
+interface RecipeListResponse {
+  items: Recipe[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+```
 
 ---
 
@@ -549,3 +561,4 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-15 | Initial contract document (pre-implementation) |
 | 2026-06-15 | Removed AI Import and Voice→AI pipeline sections |
 | 2026-06-16 | Fix JWT payload — `email` claim was never signed; payload is `{ userId, iat, exp }` only |
+| 2026-06-18 | `GET /recipes` — paginated list response (`page`, `limit`; default 20 per page) |
