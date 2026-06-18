@@ -98,3 +98,13 @@ Google OAuth keys, and LLM keys. **Never commit secrets** — use `.env` / GitHu
   the import wizard in the client. Do not edit the other person's files on this branch.
 - **CONTRACTS.md:** when adding or changing an endpoint, update the relevant section and
   append a row to the Changelog table at the bottom of the file.
+
+## Lessons Learned
+
+These are mistakes that were made and must not be repeated:
+
+- **Read before edit:** always read a file with the Read tool before modifying it — never edit from memory or assumptions.
+- **One entry point for routes:** never add `app.use(...)` in `app.js`; always register in `routes/index.js`. This was violated once and caused duplicate route registration.
+- **No hand-editing package.json:** dependency versions must be added via `npm install <pkg>` — hand-editing caused a lockfile mismatch that broke CI.
+- **Validate middleware placement:** `validate(schema)` must be placed *before* the controller in the route definition, never after.
+- **Do not touch peer files on shared branches:** on `feature/ai-import`, Shira owns `ai.*` files and Yael owns `voice.*` files — crossing this boundary caused a merge conflict that required manual resolution.
