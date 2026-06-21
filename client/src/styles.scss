@@ -1,1 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Directional back-arrow that flips automatically in RTL */
+.btn-back::before {
+  content: '←';
+  margin-inline-end: 0.35em;
+}
+
+[dir='rtl'] .btn-back::before {
+  content: '→';
+}

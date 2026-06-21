@@ -111,6 +111,15 @@
   "VALIDATION": {
     "REQUIRED": "Required field",
     "EMAIL": "Invalid email address",
-    "MIN_LENGTH": "Value is too short"
+    "MIN_LENGTH": "Value is too short",
+    "PASSWORDS_MISMATCH": "Passwords do not match"
+  },
+  "LANG": {
+    "HE": "עברית",
+    "EN": "English",
+    "TOGGLE_LABEL": "Switch language"
+  },
+  "COMMON": {
+    "REMOVE": "Remove"
   }
 }

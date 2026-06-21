@@ -1,9 +1,19 @@
 @if (authService.isLoggedIn()) {
   <header class="app-header">
     <span class="app-user">{{ authService.currentUser()?.name }}</span>
-    <button type="button" class="btn-logout" (click)="logout()">
-      {{ 'AUTH.LOGOUT' | translate }}
-    </button>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn-lang"
+        [attr.aria-label]="'LANG.TOGGLE_LABEL' | translate"
+        (click)="languageService.toggle()"
+      >
+        {{ languageService.currentLang() === 'he' ? ('LANG.EN' | translate) : ('LANG.HE' | translate) }}
+      </button>
+      <button type="button" class="btn-logout" (click)="logout()">
+        {{ 'AUTH.LOGOUT' | translate }}
+      </button>
+    </div>
   </header>
 }
 <router-outlet />

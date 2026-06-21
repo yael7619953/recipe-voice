@@ -111,6 +111,15 @@
   "VALIDATION": {
     "REQUIRED": "שדה חובה",
     "EMAIL": "כתובת אימייל לא תקינה",
-    "MIN_LENGTH": "הערך קצר מדי"
+    "MIN_LENGTH": "הערך קצר מדי",
+    "PASSWORDS_MISMATCH": "הסיסמאות אינן תואמות"
+  },
+  "LANG": {
+    "HE": "עברית",
+    "EN": "English",
+    "TOGGLE_LABEL": "החלף שפה"
+  },
+  "COMMON": {
+    "REMOVE": "הסר"
   }
 }
