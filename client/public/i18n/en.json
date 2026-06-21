@@ -1,1 +1,38 @@
-{}
+{
+  "AUTH": {
+    "FIELD": {
+      "NAME": "Name",
+      "EMAIL": "Email",
+      "PASSWORD": "Password",
+      "CONFIRM_PASSWORD": "Confirm password"
+    },
+    "LOGIN": {
+      "TITLE": "Log in",
+      "SUBMIT": "Log in",
+      "NO_ACCOUNT": "Don't have an account?",
+      "REGISTER_LINK": "Sign up"
+    },
+    "REGISTER": {
+      "TITLE": "Sign up",
+      "SUBMIT": "Sign up",
+      "HAS_ACCOUNT": "Already have an account?",
+      "LOGIN_LINK": "Log in"
+    },
+    "LOGOUT": "Log out",
+    "ERROR": {
+      "INVALID_CREDENTIALS": "Invalid email or password. Sign up first if you do not have an account.",
+      "EMAIL_TAKEN": "Email is already registered. Log in with your original password, or use a different email.",
+      "SERVER": "Server error, please try again",
+      "OAUTH_FAILED": "Google sign-in failed. Please try again or log in with your password."
+    }
+  },
+  "RECIPES": {
+    "TITLE": "My recipes",
+    "PLACEHOLDER": "Your recipe list will appear here soon."
+  },
+  "VALIDATION": {
+    "REQUIRED": "Required field",
+    "EMAIL": "Invalid email address",
+    "MIN_LENGTH": "Value is too short"
+  }
+}
