@@ -28,7 +28,50 @@
   },
   "RECIPES": {
     "TITLE": "המתכונים שלי",
-    "PLACEHOLDER": "רשימת המתכונים תופיע כאן בקרוב."
+    "NEW": "מתכון חדש",
+    "EMPTY": "עדיין אין מתכונים. הוסיפי את המתכון הראשון שלך!",
+    "LOADING": "טוען...",
+    "FAVORITE": "מועדף",
+    "EDIT": "ערוך",
+    "DELETE": "מחק",
+    "BACK": "חזרה לרשימה",
+    "INGREDIENTS": "מצרכים",
+    "INSTRUCTIONS": "אופן הכנה",
+    "PREP_TIME": "זמן הכנה",
+    "SERVINGS": "מנות",
+    "NOTES": "הערות",
+    "STEP": "שלב",
+    "TIMER": "טיימר",
+    "MINUTES_SHORT": "ד׳",
+    "HOURS_SHORT": "ש׳",
+    "ERROR": {
+      "LOAD": "שגיאה בטעינת המתכונים",
+      "DELETE": "שגיאה במחיקה",
+      "SAVE": "שגיאה בשמירה",
+      "NOT_FOUND": "המתכון לא נמצא"
+    },
+    "FORM": {
+      "TITLE_NEW": "מתכון חדש",
+      "TITLE_EDIT": "עריכת מתכון",
+      "FIELD": {
+        "TITLE": "שם המתכון",
+        "DESCRIPTION": "תיאור",
+        "INGREDIENTS": "מצרכים",
+        "INGREDIENT_PH": "מצרך...",
+        "INSTRUCTIONS": "שלבי הכנה",
+        "INSTRUCTION_PH": "תאר את השלב...",
+        "HAS_TIMER": "הוסף טיימר לשלב זה",
+        "TIMER_DURATION": "משך (שניות)",
+        "PREP_HOURS": "שעות",
+        "PREP_MINUTES": "דקות",
+        "SERVINGS": "מנות",
+        "NOTES": "הערות"
+      },
+      "ADD_INGREDIENT": "הוסף מצרך",
+      "ADD_STEP": "הוסף שלב",
+      "SAVE": "שמור",
+      "CANCEL": "ביטול"
+    }
   },
   "VALIDATION": {
     "REQUIRED": "שדה חובה",

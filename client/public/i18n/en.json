@@ -28,7 +28,50 @@
   },
   "RECIPES": {
     "TITLE": "My recipes",
-    "PLACEHOLDER": "Your recipe list will appear here soon."
+    "NEW": "New recipe",
+    "EMPTY": "No recipes yet. Add your first one!",
+    "LOADING": "Loading...",
+    "FAVORITE": "Favorite",
+    "EDIT": "Edit",
+    "DELETE": "Delete",
+    "BACK": "Back to list",
+    "INGREDIENTS": "Ingredients",
+    "INSTRUCTIONS": "Instructions",
+    "PREP_TIME": "Prep time",
+    "SERVINGS": "Servings",
+    "NOTES": "Notes",
+    "STEP": "Step",
+    "TIMER": "Timer",
+    "MINUTES_SHORT": "min",
+    "HOURS_SHORT": "hr",
+    "ERROR": {
+      "LOAD": "Error loading recipes",
+      "DELETE": "Error deleting recipe",
+      "SAVE": "Error saving recipe",
+      "NOT_FOUND": "Recipe not found"
+    },
+    "FORM": {
+      "TITLE_NEW": "New recipe",
+      "TITLE_EDIT": "Edit recipe",
+      "FIELD": {
+        "TITLE": "Recipe title",
+        "DESCRIPTION": "Description",
+        "INGREDIENTS": "Ingredients",
+        "INGREDIENT_PH": "Ingredient...",
+        "INSTRUCTIONS": "Instructions",
+        "INSTRUCTION_PH": "Describe the step...",
+        "HAS_TIMER": "Add timer to this step",
+        "TIMER_DURATION": "Duration (seconds)",
+        "PREP_HOURS": "Hours",
+        "PREP_MINUTES": "Minutes",
+        "SERVINGS": "Servings",
+        "NOTES": "Notes"
+      },
+      "ADD_INGREDIENT": "Add ingredient",
+      "ADD_STEP": "Add step",
+      "SAVE": "Save",
+      "CANCEL": "Cancel"
+    }
   },
   "VALIDATION": {
     "REQUIRED": "Required field",
