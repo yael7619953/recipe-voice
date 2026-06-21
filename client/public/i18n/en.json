@@ -1,1 +1,32 @@
-{}
+{
+  "categories": {
+    "title": "All Categories",
+    "subtitle": "{{count}} categories",
+    "new": "New Category",
+    "empty": "No categories yet. Create your first one!",
+    "addSub": "Add subcategory",
+    "edit": "Edit",
+    "delete": "Delete",
+    "subCount": "{{count}} subcategories",
+    "noSub": "No subcategories",
+    "confirmDelete": "Delete the category \"{{name}}\"?",
+    "form": {
+      "createTitle": "New Category",
+      "editTitle": "Edit Category",
+      "name": "Name",
+      "namePlaceholder": "e.g. Desserts",
+      "color": "Color",
+      "icon": "Icon",
+      "parent": "Parent category",
+      "noParent": "None (top-level)",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "load": "Failed to load categories",
+      "save": "Failed to save category",
+      "hasChildren": "Cannot delete a category with subcategories or linked recipes",
+      "generic": "Something went wrong, please try again"
+    }
+  }
+}

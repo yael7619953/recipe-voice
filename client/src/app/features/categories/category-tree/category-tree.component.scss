@@ -1,0 +1,139 @@
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+// Nested levels are indented from the start edge and get a guide line.
+:host-context(app-category-tree) .tree:not(.tree--root) {
+  margin-inline-start: 1.5rem;
+  padding-inline-start: 1rem;
+  border-inline-start: 2px dashed #e6e6e9;
+  margin-block-start: 0.625rem;
+}
+
+.tree__item {
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 1px solid #ececef;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(20, 20, 30, 0.04);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--cat-color, #f15a29);
+  box-shadow: 0 4px 14px rgba(20, 20, 30, 0.08);
+}
+
+.card__toggle {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: #f5f5f7;
+  color: #6b6b76;
+  cursor: pointer;
+}
+
+.card__toggle--hidden {
+  visibility: hidden;
+}
+
+.card__chevron {
+  display: inline-block;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+  transform: rotate(180deg); // points to the start edge in RTL
+}
+
+.card__chevron--open {
+  transform: rotate(90deg);
+}
+
+.card__icon {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cat-color, #f15a29) 16%, #fff);
+}
+
+.card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: start;
+}
+
+.card__name {
+  font-weight: 600;
+  color: #1c1c24;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card__meta {
+  font-size: 0.8rem;
+  color: #8a8a95;
+}
+
+.card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+.icon-btn {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b6b76;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: #f3f3f5;
+  color: #1c1c24;
+}
+
+.icon-btn--danger:hover {
+  background: color-mix(in srgb, #e5484d 14%, #fff);
+  color: #e5484d;
+}
