@@ -15,7 +15,9 @@ import {
   replaceHandler,
   patchHandler,
   deleteHandler,
+  uploadImageHandler,
 } from '../controllers/recipe.controller.js';
+import { uploadImage } from '../middleware/upload.middleware.js';
 
 const router = Router();
 
@@ -27,5 +29,6 @@ router.post('/', validateBody(createSchema), createHandler);
 router.put('/:id', validateParams(idSchema), validateBody(replaceSchema), replaceHandler);
 router.patch('/:id', validateParams(idSchema), validateBody(patchSchema), patchHandler);
 router.delete('/:id', validateParams(idSchema), deleteHandler);
+router.post('/:id/image', validateParams(idSchema), uploadImage, uploadImageHandler);
 
 export default router;
