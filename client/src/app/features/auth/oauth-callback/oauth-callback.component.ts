@@ -7,7 +7,6 @@ import {
   OAUTH_FAILURE_ROUTE,
   OAUTH_SUCCESS_REDIRECT,
   OAUTH_TOKEN_QUERY_PARAM,
-  OAuthAuthMethods,
 } from '../oauth-auth.contract';
 
 @Component({
@@ -19,7 +18,7 @@ import {
 export class OauthCallbackComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly auth = inject(AuthService) as AuthService & OAuthAuthMethods;
+  private readonly auth = inject(AuthService);
 
   ngOnInit(): void {
     const token = this.route.snapshot.queryParamMap.get(OAUTH_TOKEN_QUERY_PARAM);
@@ -29,12 +28,10 @@ export class OauthCallbackComponent implements OnInit {
       return;
     }
 
-    try {
-      this.auth.applyOAuthToken(token);
-      void this.router.navigateByUrl(OAUTH_SUCCESS_REDIRECT);
-    } catch {
-      this.redirectToLoginFailure();
-    }
+    this.auth.applyOAuthToken(token).subscribe({
+      next: () => void this.router.navigateByUrl(OAUTH_SUCCESS_REDIRECT),
+      error: () => this.redirectToLoginFailure(),
+    });
   }
 
   private redirectToLoginFailure(): void {

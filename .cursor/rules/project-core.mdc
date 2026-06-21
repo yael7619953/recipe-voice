@@ -40,3 +40,10 @@ Recipe platform with voice kitchen assistant (TTS + STT) and AI recipe import.
 ## API Contracts
 
 When changing endpoints, update the relevant section in `CONTRACTS.md` **and** append a row to its Changelog table.
+
+## Lessons Learned
+
+- **Do not re-use a multer instance** — always import `uploadPdf`, `uploadImage`, `uploadAudio`, or `uploadMedia` from `upload.middleware.js`; never call `multer()` directly.
+- **asyncHandler is mandatory** — every controller function must be wrapped with `asyncHandler`; never use `try/catch` in controllers.
+- **AppError only** — never `throw new Error(...)` in services or controllers; always `throw new AppError(message, statusCode)`.
+- **userId filter always** — every DB query that returns user data must include `{ userId: req.userId }` in the filter; missing this is a security bug.

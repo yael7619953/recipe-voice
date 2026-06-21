@@ -3,8 +3,10 @@ import {
   registerHandler,
   loginHandler,
   googleCallbackHandler,
+  meHandler,
 } from '../controllers/auth.controller.js';
 import passport from '../config/passport.js';
+import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:4200';
@@ -20,5 +22,6 @@ router.get(
 
 router.post('/register', registerHandler);
 router.post('/login', loginHandler);
+router.get('/me', authMiddleware, meHandler);
 
 export default router;
