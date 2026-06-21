@@ -17,8 +17,9 @@ Update this file whenever an endpoint shape changes.
 3. [Auth — `/auth`](#3-auth--auth)
 4. [Categories — `/categories`](#4-categories--categories)
 5. [Recipes — `/recipes`](#5-recipes--recipes)
-6. [Voice — `/voice`](#6-voice--voice)
-7. [Health Check](#7-health-check)
+6. [AI Import — `/ai`](#6-ai-import--ai)
+7. [Voice — `/voice`](#7-voice--voice)
+8. [Health Check](#8-health-check)
 
 ---
 
@@ -38,7 +39,7 @@ Every query/mutation on user-owned resources **must** filter by `userId`.
 | Route group | Auth required |
 | ----------- | ------------- |
 | `/auth/register`, `/auth/login`, `/auth/google*` | No |
-| `/categories`, `/recipes`, `/voice` | Yes |
+| `/categories`, `/recipes`, `/ai`, `/voice` | Yes |
 | `GET /` (root) | No |
 
 ### Content Types
@@ -67,7 +68,10 @@ Every query/mutation on user-owned resources **must** filter by `userId`.
 | `409` | Conflict (e.g. duplicate email) |
 | `413` | File too large |
 | `415` | Unsupported media type |
+| `422` | Unprocessable content (e.g. blank PDF / empty Word document) |
 | `500` | Internal server error |
+| `502` | Third-party service failure (OpenAI / Whisper) |
+| `503` | Service not configured (e.g. missing API key) |
 
 ### Error Response Shape
 
@@ -472,7 +476,69 @@ Partial update. Any subset of `RecipeDraft` fields.
 
 ---
 
-## 6. Voice — `/voice`
+## 6. AI Import — `/ai`
+
+Owner: Shira (`ai.service.js`, `ai.controller.js`, `ai.routes.js`). All routes require JWT.
+
+### `POST /ai/extract`
+
+Extract a structured recipe from an uploaded file (PDF, image, or Word `.docx`).
+The server reads the file, extracts its text (or uses Gemini Vision for images), calls
+Gemini structured output with the recipe schema, and returns the parsed recipe preview.
+The file is **not** saved to the database — the client wizard (Yael, M15) displays
+the result for user review before saving via `POST /recipes`.
+
+**Request:** `multipart/form-data`
+
+| Field | Type | Rules |
+| ----- | ---- | ----- |
+| `file` | file | required; PDF / image (jpg, png, webp, …) / `.docx`; max size per `UPLOAD_MAX_FILE_SIZE` env var (default 25 MB) |
+
+**Headers:** `Authorization: Bearer <token>` (required)
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "title": "Chocolate Cake",
+    "description": "Rich and moist chocolate cake",
+    "ingredients": ["2 cups flour", "1 cup sugar", "3 eggs"],
+    "instructions": [
+      {
+        "text": "Preheat oven to 180°C",
+        "timer": { "duration": 0, "hasTimer": false }
+      },
+      {
+        "text": "Bake for 30 minutes",
+        "timer": { "duration": 30, "hasTimer": true }
+      }
+    ],
+    "prepTime": { "hours": 0, "minutes": 45 },
+    "servings": "8",
+    "notes": null
+  }
+}
+```
+
+The `data` object matches `RecipeDraft` (minus `categories`, `isFavorite`, `imageUrl` which
+are not extracted from the file). Optional fields (`description`, `notes`) are `null` when
+absent in the source document.
+
+**Errors:**
+
+| Code | Condition |
+| ---- | --------- |
+| `400` | No file uploaded |
+| `415` | Unsupported file type |
+| `422` | File content is blank / unreadable (empty PDF or Word document) |
+| `502` | Gemini API call failed (network, quota, timeout) |
+| `503` | `GEMINI_API_KEY` not configured on the server |
+
+---
+
+## 7. Voice — `/voice`
 
 Owner: Yael (Whisper STT). All routes require JWT.
 
@@ -543,7 +609,7 @@ Classify a **short** audio clip as a cooking voice command (fallback for cooking
 
 ---
 
-## 7. Health Check
+## 8. Health Check
 
 ### `GET /`
 
@@ -586,3 +652,5 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-16 | Fix JWT payload — `email` claim was never signed; payload is `{ userId, iat, exp }` only |
 | 2026-06-18 | `GET /recipes` — paginated list response (`page`, `limit`; default 20 per page) |
 | 2026-06-21 | Add `GET /auth/me` — returns authenticated user profile for OAuth token bootstrap |
+| 2026-06-21 | Add section 6 `POST /ai/extract` — AI recipe extraction from PDF / image / Word `.docx`; add status codes 422, 502, 503 |
+| 2026-06-21 | AI import provider switched from OpenAI to Gemini (`GEMINI_API_KEY`); voice/STT still planned as Whisper |
