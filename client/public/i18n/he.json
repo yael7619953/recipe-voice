@@ -28,5 +28,89 @@
       "hasChildren": "לא ניתן למחוק קטגוריה עם תת-קטגוריות או מתכונים מקושרים",
       "generic": "אירעה שגיאה, נסי שוב"
     }
+  },
+  "AUTH": {
+    "FIELD": {
+      "NAME": "שם",
+      "EMAIL": "אימייל",
+      "PASSWORD": "סיסמה",
+      "CONFIRM_PASSWORD": "אימות סיסמה"
+    },
+    "LOGIN": {
+      "TITLE": "התחברות",
+      "SUBMIT": "התחבר",
+      "NO_ACCOUNT": "אין לך חשבון?",
+      "REGISTER_LINK": "הירשם"
+    },
+    "REGISTER": {
+      "TITLE": "הרשמה",
+      "SUBMIT": "הירשם",
+      "HAS_ACCOUNT": "כבר יש לך חשבון?",
+      "LOGIN_LINK": "התחבר"
+    },
+    "LOGOUT": "התנתק",
+    "OAUTH_CALLBACK": {
+      "PROCESSING": "מתחברים..."
+    },
+    "ERROR": {
+      "INVALID_CREDENTIALS": "אימייל או סיסמה שגויים. אם אין לך חשבון — הירשמי קודם.",
+      "EMAIL_TAKEN": "האימייל כבר רשום. התחברי עם הסיסמה שבחרת בהרשמה, או השתמשי באימייל אחר.",
+      "SERVER": "שגיאת שרת, נסי שוב",
+      "OAUTH_FAILED": "ההתחברות עם Google נכשלה. נסי שוב או התחבר עם הסיסמה שלך."
+    }
+  },
+  "RECIPES": {
+    "TITLE": "המתכונים שלי",
+    "NEW": "מתכון חדש",
+    "EMPTY": "עדיין אין מתכונים. הוסיפי את המתכון הראשון שלך!",
+    "LOADING": "טוען...",
+    "FAVORITE": "מועדף",
+    "EDIT": "ערוך",
+    "DELETE": "מחק",
+    "BACK": "חזרה לרשימה",
+    "INGREDIENTS": "מצרכים",
+    "INSTRUCTIONS": "אופן הכנה",
+    "PREP_TIME": "זמן הכנה",
+    "SERVINGS": "מנות",
+    "NOTES": "הערות",
+    "STEP": "שלב",
+    "TIMER": "טיימר",
+    "MINUTES_SHORT": "ד׳",
+    "HOURS_SHORT": "ש׳",
+    "ERROR": {
+      "LOAD": "שגיאה בטעינת המתכונים",
+      "DELETE": "שגיאה במחיקה",
+      "SAVE": "שגיאה בשמירה",
+      "NOT_FOUND": "המתכון לא נמצא"
+    },
+    "FORM": {
+      "TITLE_NEW": "מתכון חדש",
+      "TITLE_EDIT": "עריכת מתכון",
+      "FIELD": {
+        "TITLE": "שם המתכון",
+        "DESCRIPTION": "תיאור",
+        "INGREDIENTS": "מצרכים",
+        "INGREDIENT_PH": "מצרך...",
+        "INSTRUCTIONS": "שלבי הכנה",
+        "INSTRUCTION_PH": "תאר את השלב...",
+        "HAS_TIMER": "הוסף טיימר לשלב זה",
+        "TIMER_DURATION": "משך (דקות)",
+        "PREP_HOURS": "שעות",
+        "PREP_MINUTES": "דקות",
+        "SERVINGS": "מנות",
+        "NOTES": "הערות",
+        "IMAGE": "תמונה",
+        "IMAGE_BTN": "בחר תמונה"
+      },
+      "ADD_INGREDIENT": "הוסף מצרך",
+      "ADD_STEP": "הוסף שלב",
+      "SAVE": "שמור",
+      "CANCEL": "ביטול"
+    }
+  },
+  "VALIDATION": {
+    "REQUIRED": "שדה חובה",
+    "EMAIL": "כתובת אימייל לא תקינה",
+    "MIN_LENGTH": "הערך קצר מדי"
   }
 }

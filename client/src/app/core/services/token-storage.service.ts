@@ -6,19 +6,25 @@ const USER_KEY = 'auth_user';
 
 @Injectable({ providedIn: 'root' })
 export class TokenStorageService {
-  getToken(): string | null {
+  hasValidSession(): boolean {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token || this.isExpired(token)) {
+      return false;
+    }
+    return !!localStorage.getItem(USER_KEY);
+  }
+
+  getToken(): string | null {
+    if (!this.hasValidSession()) {
       this.clear();
       return null;
     }
-    return token;
+    return localStorage.getItem(TOKEN_KEY);
   }
 
   getUser(): AuthUser | null {
     try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token || this.isExpired(token)) {
+      if (!this.hasValidSession()) {
         this.clear();
         return null;
       }

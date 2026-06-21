@@ -269,6 +269,29 @@ The client reads `token` from the query string and stores it via `auth.service`.
 
 ---
 
+### `GET /auth/me`
+
+Returns the authenticated user's profile. Used by the client after OAuth to fetch name/email.
+
+**Headers:** `Authorization: Bearer <token>` (required)
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "user": {
+    "id": "664a00000000000000000001",
+    "name": "Yael Cohen",
+    "email": "yael@example.com"
+  }
+}
+```
+
+**Errors:** `401` missing/invalid token, `404` user not found.
+
+---
+
 ## 4. Categories — `/categories`
 
 Owner: Yael. All routes require JWT.
@@ -370,8 +393,20 @@ List recipes for the authenticated user.
 | `category` | string | Filter by category `_id` |
 | `favorite` | boolean | When `true`, only favorites |
 | `q` | string | Optional title search (case-insensitive) |
+| `page` | number | Page number (default `1`, minimum `1`) |
+| `limit` | number | Items per page (default `20`, maximum `20`) |
 
-**Response `200`:** `Recipe[]`
+**Response `200`:**
+
+```typescript
+interface RecipeListResponse {
+  items: Recipe[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+```
 
 ---
 
@@ -549,3 +584,5 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-15 | Initial contract document (pre-implementation) |
 | 2026-06-15 | Removed AI Import and Voice→AI pipeline sections |
 | 2026-06-16 | Fix JWT payload — `email` claim was never signed; payload is `{ userId, iat, exp }` only |
+| 2026-06-18 | `GET /recipes` — paginated list response (`page`, `limit`; default 20 per page) |
+| 2026-06-21 | Add `GET /auth/me` — returns authenticated user profile for OAuth token bootstrap |
