@@ -108,6 +108,13 @@
       "CANCEL": "ביטול"
     }
   },
+  "COOKING": {
+    "EXIT": "יציאה ממצב בישול",
+    "STEP_OF": "שלב {{current}} מתוך {{total}}",
+    "NO_STEPS": "אין במתכון הזה שלבי הכנה.",
+    "PREVIOUS": "הקודם",
+    "NEXT": "הבא"
+  },
   "VALIDATION": {
     "REQUIRED": "שדה חובה",
     "EMAIL": "כתובת אימייל לא תקינה",

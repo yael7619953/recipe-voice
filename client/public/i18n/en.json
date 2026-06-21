@@ -108,6 +108,13 @@
       "CANCEL": "Cancel"
     }
   },
+  "COOKING": {
+    "EXIT": "Exit cooking",
+    "STEP_OF": "Step {{current}} of {{total}}",
+    "NO_STEPS": "This recipe has no steps to cook.",
+    "PREVIOUS": "Previous",
+    "NEXT": "Next"
+  },
   "VALIDATION": {
     "REQUIRED": "Required field",
     "EMAIL": "Invalid email address",

@@ -1,0 +1,45 @@
+<div class="cooking-page">
+  @if (loading()) {
+    <p class="status-msg">{{ 'RECIPES.LOADING' | translate }}</p>
+  } @else if (errorKey() || !recipe()) {
+    <p class="status-msg error" role="alert">
+      {{ (errorKey() ?? 'RECIPES.ERROR.NOT_FOUND') | translate }}
+    </p>
+    <a class="btn-back" routerLink="/recipes">← {{ 'RECIPES.BACK' | translate }}</a>
+  } @else if (totalSteps() === 0) {
+    <p class="status-msg">{{ 'COOKING.NO_STEPS' | translate }}</p>
+    <a class="btn-back" [routerLink]="['/recipes', recipe()!._id]">← {{ 'RECIPES.BACK' | translate }}</a>
+  } @else {
+    <header class="cooking-header">
+      <a class="btn-back" [routerLink]="['/recipes', recipe()!._id]">← {{ 'COOKING.EXIT' | translate }}</a>
+      <h1 class="cooking-title">{{ recipe()!.title }}</h1>
+      <span class="cooking-progress">
+        {{ 'COOKING.STEP_OF' | translate: { current: currentStepIndex() + 1, total: totalSteps() } }}
+      </span>
+    </header>
+
+    <div
+      class="progress-bar"
+      role="progressbar"
+      [attr.aria-valuenow]="currentStepIndex() + 1"
+      [attr.aria-valuemin]="1"
+      [attr.aria-valuemax]="totalSteps()"
+    >
+      <div class="progress-bar__fill" [style.inline-size.%]="((currentStepIndex() + 1) / totalSteps()) * 100"></div>
+    </div>
+
+    <article class="step-card">
+      <span class="step-number">{{ 'RECIPES.STEP' | translate }} {{ currentStepIndex() + 1 }}</span>
+      <p class="step-text">{{ currentStep().text }}</p>
+    </article>
+
+    <nav class="step-nav">
+      <button type="button" class="nav-btn" [disabled]="isFirstStep()" (click)="previous()">
+        ← {{ 'COOKING.PREVIOUS' | translate }}
+      </button>
+      <button type="button" class="nav-btn nav-btn--primary" [disabled]="isLastStep()" (click)="next()">
+        {{ 'COOKING.NEXT' | translate }} →
+      </button>
+    </nav>
+  }
+</div>
