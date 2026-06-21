@@ -13,4 +13,10 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/recipes/recipes.routes').then((m) => m.recipesRoutes),
   },
+  {
+    path: 'categories',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/categories/categories.routes').then((m) => m.CATEGORIES_ROUTES),
+  },
 ];

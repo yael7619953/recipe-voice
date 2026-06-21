@@ -1,0 +1,46 @@
+<section class="page">
+  <header class="page__head">
+    <div class="page__heading">
+      <h1 class="page__title">{{ 'categories.title' | translate }}</h1>
+      <p class="page__subtitle">{{ 'categories.subtitle' | translate: { count: count() } }}</p>
+    </div>
+    <button type="button" class="btn btn--primary" (click)="openCreate()">
+      <span class="btn__plus">+</span>
+      {{ 'categories.new' | translate }}
+    </button>
+  </header>
+
+  @if (error()) {
+    <div class="alert" role="alert">{{ error()! | translate }}</div>
+  }
+
+  @if (loading() && count() === 0) {
+    <p class="state">…</p>
+  } @else if (count() === 0) {
+    <div class="empty">
+      <span class="empty__icon" aria-hidden="true">📂</span>
+      <p class="empty__text">{{ 'categories.empty' | translate }}</p>
+      <button type="button" class="btn btn--primary" (click)="openCreate()">
+        {{ 'categories.new' | translate }}
+      </button>
+    </div>
+  } @else {
+    <app-category-tree
+      [nodes]="tree()"
+      (edit)="openEdit($event)"
+      (remove)="handleDelete($event)"
+      (addChild)="openAddChild($event)"
+    />
+  }
+</section>
+
+@if (formOpen()) {
+  <app-category-form
+    [editing]="editing()"
+    [categories]="categories()"
+    [presetParentId]="presetParentId()"
+    [saving]="saving()"
+    (save)="handleSave($event)"
+    (cancel)="closeForm()"
+  />
+}

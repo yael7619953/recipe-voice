@@ -1,0 +1,75 @@
+<div class="overlay" (click)="cancel.emit()">
+  <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <header class="dialog__head">
+      <h2 class="dialog__title">
+        {{ (editing ? 'categories.form.editTitle' : 'categories.form.createTitle') | translate }}
+      </h2>
+      <button type="button" class="dialog__close" (click)="cancel.emit()" aria-label="close">
+        ✕
+      </button>
+    </header>
+
+    <form class="dialog__body" [formGroup]="form" (ngSubmit)="submit()">
+      <label class="field">
+        <span class="field__label">{{ 'categories.form.name' | translate }}</span>
+        <input
+          type="text"
+          formControlName="name"
+          class="field__input"
+          [placeholder]="'categories.form.namePlaceholder' | translate"
+        />
+      </label>
+
+      <div class="field">
+        <span class="field__label">{{ 'categories.form.icon' | translate }}</span>
+        <div class="swatches">
+          @for (icon of icons; track icon) {
+            <button
+              type="button"
+              class="swatch swatch--icon"
+              [class.swatch--active]="form.controls.icon.value === icon"
+              (click)="selectIcon(icon)"
+            >
+              {{ icon }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field__label">{{ 'categories.form.color' | translate }}</span>
+        <div class="swatches">
+          @for (color of colors; track color) {
+            <button
+              type="button"
+              class="swatch swatch--color"
+              [class.swatch--active]="form.controls.color.value === color"
+              [style.background]="color"
+              [attr.aria-label]="color"
+              (click)="selectColor(color)"
+            ></button>
+          }
+        </div>
+      </div>
+
+      <label class="field">
+        <span class="field__label">{{ 'categories.form.parent' | translate }}</span>
+        <select formControlName="parentCategory" class="field__input">
+          <option [ngValue]="null">{{ 'categories.form.noParent' | translate }}</option>
+          @for (opt of parentOptions; track opt.id) {
+            <option [ngValue]="opt.id" [disabled]="opt.disabled">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+
+      <footer class="dialog__foot">
+        <button type="button" class="btn btn--ghost" (click)="cancel.emit()">
+          {{ 'categories.form.cancel' | translate }}
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="saving">
+          {{ 'categories.form.save' | translate }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

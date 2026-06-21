@@ -1,0 +1,67 @@
+<ul class="tree" [class.tree--root]="depth === 0">
+  @for (node of nodes; track node._id) {
+    <li class="tree__item">
+      <div class="card" [style.--cat-color]="node.color">
+        <button
+          type="button"
+          class="card__toggle"
+          [class.card__toggle--hidden]="node.children.length === 0"
+          [attr.aria-expanded]="isExpanded(node._id)"
+          (click)="toggle(node._id)"
+        >
+          <span class="card__chevron" [class.card__chevron--open]="isExpanded(node._id)">›</span>
+        </button>
+
+        <span class="card__icon" aria-hidden="true">{{ node.icon }}</span>
+
+        <div class="card__body">
+          <span class="card__name">{{ node.name }}</span>
+          <span class="card__meta">
+            @if (node.children.length > 0) {
+              {{ 'categories.subCount' | translate: { count: node.children.length } }}
+            } @else {
+              {{ 'categories.noSub' | translate }}
+            }
+          </span>
+        </div>
+
+        <div class="card__actions">
+          <button
+            type="button"
+            class="icon-btn"
+            [title]="'categories.addSub' | translate"
+            (click)="addChild.emit(node)"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            class="icon-btn"
+            [title]="'categories.edit' | translate"
+            (click)="edit.emit(node)"
+          >
+            ✎
+          </button>
+          <button
+            type="button"
+            class="icon-btn icon-btn--danger"
+            [title]="'categories.delete' | translate"
+            (click)="remove.emit(node)"
+          >
+            🗑
+          </button>
+        </div>
+      </div>
+
+      @if (node.children.length > 0 && isExpanded(node._id)) {
+        <app-category-tree
+          [nodes]="node.children"
+          [depth]="depth + 1"
+          (edit)="edit.emit($event)"
+          (remove)="remove.emit($event)"
+          (addChild)="addChild.emit($event)"
+        />
+      }
+    </li>
+  }
+</ul>
