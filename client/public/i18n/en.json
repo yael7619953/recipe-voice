@@ -19,6 +19,9 @@
       "LOGIN_LINK": "Log in"
     },
     "LOGOUT": "Log out",
+    "OAUTH_CALLBACK": {
+      "PROCESSING": "Signing you in..."
+    },
     "ERROR": {
       "INVALID_CREDENTIALS": "Invalid email or password. Sign up first if you do not have an account.",
       "EMAIL_TAKEN": "Email is already registered. Log in with your original password, or use a different email.",

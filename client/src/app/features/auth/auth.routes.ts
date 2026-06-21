@@ -4,6 +4,13 @@ import { logoutGuard } from '../../core/guards/logout.guard';
 
 export const authRoutes: Routes = [
   {
+    path: 'oauth-callback',
+    loadComponent: () =>
+      import('./oauth-callback/oauth-callback.component').then(
+        (m) => m.OauthCallbackComponent,
+      ),
+  },
+  {
     path: 'logout',
     canActivate: [logoutGuard],
     loadComponent: () =>
