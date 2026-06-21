@@ -1,0 +1,87 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <h1 class="auth-title">{{ 'AUTH.REGISTER.TITLE' | translate }}</h1>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="name">{{ 'AUTH.FIELD.NAME' | translate }}</label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          autocomplete="name"
+          [class.invalid]="name.invalid && name.touched"
+        />
+        @if (name.invalid && name.touched) {
+          <span class="field-error">
+            {{ (name.errors?.['required'] ? 'VALIDATION.REQUIRED' : 'VALIDATION.MIN_LENGTH') | translate }}
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="email">{{ 'AUTH.FIELD.EMAIL' | translate }}</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          [class.invalid]="email.invalid && email.touched"
+        />
+        @if (email.invalid && email.touched) {
+          <span class="field-error">
+            {{ (email.errors?.['required'] ? 'VALIDATION.REQUIRED' : 'VALIDATION.EMAIL') | translate }}
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="password">{{ 'AUTH.FIELD.PASSWORD' | translate }}</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          autocomplete="new-password"
+          [class.invalid]="password.invalid && password.touched"
+        />
+        @if (password.invalid && password.touched) {
+          <span class="field-error">
+            {{ (password.errors?.['required'] ? 'VALIDATION.REQUIRED' : 'VALIDATION.MIN_LENGTH') | translate }}
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="confirmPassword">{{ 'AUTH.FIELD.CONFIRM_PASSWORD' | translate }}</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          [class.invalid]="confirmPassword.touched && (confirmPassword.errors?.['required'] || passwordsMismatch)"
+        />
+        @if (confirmPassword.errors?.['required'] && confirmPassword.touched) {
+          <span class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</span>
+        } @else if (passwordsMismatch) {
+          <span class="field-error">{{ 'VALIDATION.PASSWORDS_MISMATCH' | translate }}</span>
+        }
+      </div>
+
+      @if (errorKey()) {
+        <div class="server-error" role="alert">{{ errorKey()! | translate }}</div>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner" aria-hidden="true"></span>
+        }
+        {{ 'AUTH.REGISTER.SUBMIT' | translate }}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      {{ 'AUTH.REGISTER.HAS_ACCOUNT' | translate }}
+      <a routerLink="/auth/login">{{ 'AUTH.REGISTER.LOGIN_LINK' | translate }}</a>
+    </p>
+  </div>
+</div>

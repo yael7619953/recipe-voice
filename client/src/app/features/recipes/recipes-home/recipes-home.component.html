@@ -1,0 +1,55 @@
+<main class="recipes-page">
+  <header class="recipes-header">
+    <h1 class="recipes-title">{{ 'RECIPES.TITLE' | translate }}</h1>
+    <div class="recipes-header__actions">
+      <a class="btn-secondary" routerLink="/categories">{{ 'RECIPES.CATEGORIES' | translate }}</a>
+      <a class="btn-primary" routerLink="/recipes/new">{{ 'RECIPES.NEW' | translate }}</a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="status-msg">{{ 'RECIPES.LOADING' | translate }}</p>
+  } @else if (errorKey()) {
+    <p class="status-msg error" role="alert">{{ errorKey()! | translate }}</p>
+  } @else if (recipes().length === 0) {
+    <p class="status-msg">{{ 'RECIPES.EMPTY' | translate }}</p>
+  } @else {
+    <ul class="recipe-grid">
+      @for (recipe of recipes(); track recipe._id) {
+        <li class="recipe-card" (click)="navigateTo(recipe._id)" (keydown.enter)="navigateTo(recipe._id)" tabindex="0" role="button">
+          <div class="recipe-card__image">
+            @if (recipe.imageUrl) {
+              <img [src]="recipe.imageUrl" [alt]="recipe.title" />
+            } @else {
+              <div class="recipe-card__no-image">🍽️</div>
+            }
+            @if (categoryBadges(recipe).length > 0) {
+              <div class="recipe-card__badges">
+                @for (badge of categoryBadges(recipe); track badge.id) {
+                  <span
+                    class="recipe-card__badge"
+                    [style.--cat-color]="badge.color"
+                    aria-hidden="true"
+                  >
+                    {{ badge.icon }}
+                  </span>
+                }
+              </div>
+            }
+          </div>
+          <div class="recipe-card__footer">
+            <h2 class="recipe-card__title">{{ recipe.title }}</h2>
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button [disabled]="page() === 1" (click)="loadPage(page() - 1)">‹</button>
+        <span>{{ page() }} / {{ totalPages() }}</span>
+        <button [disabled]="page() === totalPages()" (click)="loadPage(page() + 1)">›</button>
+      </div>
+    }
+  }
+</main>
