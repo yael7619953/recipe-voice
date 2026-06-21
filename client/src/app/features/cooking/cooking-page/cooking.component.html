@@ -31,6 +31,18 @@
     <article class="step-card" [class.step-card--speaking]="isTtsSpeaking()">
       <span class="step-number">{{ 'RECIPES.STEP' | translate }} {{ currentStepIndex() + 1 }}</span>
       <p class="step-text">{{ currentStep().text }}</p>
+
+      @if (currentStep().timer.hasTimer) {
+        <button
+          type="button"
+          class="timer-badge"
+          [class.timer-badge--running]="isTimerRunning()"
+          (click)="toggleTimer()"
+        >
+          ⏲ {{ timerDisplay() }}
+          <span class="timer-badge__icon">{{ isTimerRunning() ? '⏹' : '▶' }}</span>
+        </button>
+      }
     </article>
 
     @if (ttsSupported) {

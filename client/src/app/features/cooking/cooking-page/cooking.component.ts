@@ -57,6 +57,10 @@ export class CookingComponent implements OnInit, OnDestroy {
   readonly ttsPaused = this.tts.paused;
   readonly ttsSupported = this.tts.supported;
 
+  /** Remaining seconds for the current step's timer, or null when idle. */
+  readonly timerRemaining = signal<number | null>(null);
+  private timerHandle: ReturnType<typeof setInterval> | null = null;
+
   readonly dir = computed(() => (this.translate.currentLang() === 'en' ? 'ltr' : 'rtl'));
 
   ngOnInit(): void {
@@ -83,6 +87,7 @@ export class CookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearTimer();
     this.tts.stop();
   }
 
@@ -102,6 +107,7 @@ export class CookingComponent implements OnInit, OnDestroy {
 
   goToStep(index: number): void {
     this.currentStepIndex.set(index);
+    this.clearTimer();
     this.speakCurrentStep();
   }
 
@@ -122,5 +128,49 @@ export class CookingComponent implements OnInit, OnDestroy {
 
   stopSpeech(): void {
     this.tts.stop();
+  }
+
+  toggleTimer(): void {
+    const step = this.currentStep();
+    if (!step?.timer.hasTimer) {
+      return;
+    }
+
+    if (this.timerHandle !== null) {
+      this.clearTimer();
+      return;
+    }
+
+    this.timerRemaining.set(step.timer.duration);
+    this.timerHandle = setInterval(() => {
+      const remaining = (this.timerRemaining() ?? 0) - 1;
+      if (remaining <= 0) {
+        this.timerRemaining.set(0);
+        this.clearTimer();
+      } else {
+        this.timerRemaining.set(remaining);
+      }
+    }, 1000);
+  }
+
+  isTimerRunning(): boolean {
+    return this.timerHandle !== null;
+  }
+
+  /** mm:ss for the live countdown, or the step's full duration when idle. */
+  timerDisplay(): string {
+    const step = this.currentStep();
+    const seconds = this.timerRemaining() ?? step?.timer.duration ?? 0;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  private clearTimer(): void {
+    if (this.timerHandle !== null) {
+      clearInterval(this.timerHandle);
+      this.timerHandle = null;
+    }
+    this.timerRemaining.set(null);
   }
 }
