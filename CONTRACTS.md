@@ -269,6 +269,29 @@ The client reads `token` from the query string and stores it via `auth.service`.
 
 ---
 
+### `GET /auth/me`
+
+Returns the authenticated user's profile. Used by the client after OAuth to fetch name/email.
+
+**Headers:** `Authorization: Bearer <token>` (required)
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "user": {
+    "id": "664a00000000000000000001",
+    "name": "Yael Cohen",
+    "email": "yael@example.com"
+  }
+}
+```
+
+**Errors:** `401` missing/invalid token, `404` user not found.
+
+---
+
 ## 4. Categories — `/categories`
 
 Owner: Yael. All routes require JWT.
@@ -562,3 +585,4 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-15 | Removed AI Import and Voice→AI pipeline sections |
 | 2026-06-16 | Fix JWT payload — `email` claim was never signed; payload is `{ userId, iat, exp }` only |
 | 2026-06-18 | `GET /recipes` — paginated list response (`page`, `limit`; default 20 per page) |
+| 2026-06-21 | Add `GET /auth/me` — returns authenticated user profile for OAuth token bootstrap |
