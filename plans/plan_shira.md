@@ -22,16 +22,16 @@
 חלוקת העבודה בין Shira ל-Yael בנויה כך ששתינו נוגעות גם בשרת וגם בלקוח, וכל אחת מכסה פיצ'רים שונים — כדי שבסוף הפרויקט שתינו עברנו על כל החלקים. כל תלות בין-אישית מנוהלת דרך **לוח MERGE משותף** (ראו למטה) — אין תלות סמויה.
 
 
-| צד         | הפיצ'רים שלי                                                                                                                                                                                            |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Server** | Auth ליבה (bcrypt + JWT, `auth.middleware`, `auth.routes` register/login) · Recipes CRUD · שכבת ה-AI/LLM בשרת — `**ai.service.js` בלבד** + controllers/routes של AI (Structured Output מטקסט/PDF/תמונה) |
-| **Client** | מסכי Auth + `jwt.interceptor` + `auth.guard` · פיצ'ר Recipes (list/detail/form) · מצב בישול — `**cooking-stt.service` בלבד** (האזנה רציפה לפקודות STT) · i18n + RTL/LTR                                 |
-| **משותף**  | חצי מ-CI (יחד עם Yael)                                                                                                                                                                                  |
+| צד         | הפיצ'רים שלי                                                                                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Server** | Auth ליבה (bcrypt + JWT, `auth.middleware`, `auth.routes` register/login) · Recipes CRUD · שכבת ה-AI/LLM בשרת — `**ai.service.js` בלבד** + controllers/routes של AI (Structured Output מ-PDF/תמונה/Word `.docx`) |
+| **Client** | מסכי Auth + `jwt.interceptor` + `auth.guard` · פיצ'ר Recipes (list/detail/form) · מצב בישול — `**cooking-stt.service` בלבד** (האזנה רציפה לפקודות STT) · i18n + RTL/LTR                                          |
+| **משותף**  | חצי מ-CI (יחד עם Yael)                                                                                                                                                                                             |
 
 
-> **בעלות קבצים — חשוב:** `server/services/voice.service.js` (Whisper STT בשרת) **אינו באחריותי** — הבעלים הבלעדי הוא **Yael**. אני עובדת רק על `ai.service.js` + `ai.controller.js`/`ai.routes.js`. ב-`features/cooking/` אני בעלת `**cooking-stt.service` בלבד** — את `cooking.component`, `cooking-tts.service` והטיימרים מנהלת Yael.
+> **בעלות קבצים — חשוב:** אני עובדת על `ai.service.js` + `ai.controller.js`/`ai.routes.js` בלבד בשרת ל-AI Import. ב-`features/cooking/` אני בעלת `**cooking-stt.service` בלבד** — את `cooking.component`, `cooking-tts.service` והטיימרים מנהלת Yael.
 
-> **בת הזוג שלי — Yael** — אחראית על: תשתית שרת+לקוח, Google OAuth, Categories CRUD (שרת + UI), `**voice.service.js` בשרת (Whisper STT) — בלעדי**, מצב בישול `**cooking.component` + TTS + טיימרים ויזואליים**, ו-AI Import wizard בלקוח.
+> **בת הזוג שלי — Yael** — אחראית על: תשתית שרת+לקוח, Google OAuth, Categories CRUD (שרת + UI), מצב בישול `**cooking.component` + TTS + טיימרים ויזואליים**, ו-AI Import wizard בלקוח.
 
 ---
 
@@ -60,10 +60,10 @@
 | **M9**  | `feature/recipes-crud`            | Shira | יום 3, ~12:00 | M6 (Recipes API)                       | —                                      |
 | **M12** | `feature/categories-crud`         | Yael  | יום 3, ~12:00 | M5 (Categories API)                    | —                                      |
 | **M10** | `feature/ai-import`               | Shira | יום 3, ~18:00 | M1 (upload.middleware)                 | Yael (M15)                             |
-| **M13** | `feature/ai-import`               | Yael  | יום 3, ~18:00 | M1 (upload.middleware)                 | Yael (M15, צריכת תמלול)                |
+| ~~**M13**~~ | ~~`feature/ai-import`~~       | ~~Yael~~ | ~~יום 3~~ | **מבוטל** — אין הקלטה קולית ל-AI Import | —                                  |
 | **M11** | `feature/step-timers` (+ cooking) | Yael  | יום 4, ~12:00 | אין — עצמאי                            | Shira (M14)                            |
 | **M14** | `feature/cooking-voice-commands`  | Shira | יום 4, ~15:00 | ⏸️ **M11** (cooking.component + TTS)   | —                                      |
-| **M15** | `feature/ai-import`               | Yael  | יום 4, ~15:00 | M10 (AI server) + M13 (voice)          | —                                      |
+| **M15** | `feature/ai-import`               | Yael  | יום 4, ~15:00 | M10 (AI server)                        | —                                      |
 | **M16** | `feature/i18n-rtl`                | Shira | יום 4, ~16:30 | אין — עצמאי                            | —                                      |
 | **M17** | `feature/ci-cd`                   | Shira | יום 4, ~18:00 | כל פיצ'רי הלקוח מוזגו                  | —                                      |
 | **M18** | `feature/ci-cd`                   | Yael  | יום 4, ~18:00 | כל פיצ'רי השרת מוזגו                   | —                                      |
@@ -76,7 +76,7 @@
 
 כל שאר התלויות הן בין-יומיות (ה-MERGE כבר מוזג ביום קודם) ולכן **אינן חוסמות** ומסומנות "כבר זמין".
 
-> **בעלות הענף המשותף `feature/ai-import`:** שלושה מיזוגים יושבים על אותו ענף בבעלות שתינו — M10 (Shira), M13 (Yael), M15 (Yael). חלוקת קבצים מפורשת כדי שלא תהיה עריכה מקבילה לאותו קובץ: **Shira בעלת `ai.service.js` / `ai.controller.js` / `ai.routes.js`**; **Yael בעלת `voice.service.js` / `voice.controller.js` / `voice.routes.js` + ה-wizard בלקוח**. החיבור ביניהם דרך חוזה קלט/פלט מוסכם מראש (ראו יום 3).
+> **בעלות הענף המשותף `feature/ai-import`:** שני מיזוגים — M10 (Shira) ו-M15 (Yael). חלוקת קבצים: **אני בעלת `ai.service.js` / `ai.controller.js` / `ai.routes.js`**; **Yael בעלת ה-wizard בלקוח בלבד**. אין `voice.*` בענף זה.
 
 ---
 
@@ -156,10 +156,11 @@
 - **ענף Git:** `feature/ai-import`
 - **⏸️ ממתינה ל:** M1 (`upload.middleware`, מוזג יום 1) — כבר זמין.
 - **MERGE שלי:** M10, ~18:00
-- תוכן: `server/utils/recipeSchema.js` · `server/services/ai.service.js` (חילוץ JSON מטקסט/PDF/תמונה לפי `recipeSchema`, Structured Outputs) · `ai.controller.js` + `routes/ai.routes.js`, שימוש ב-`upload.middleware`.
-- **חוזה עם Yael (לא חוסם):** `voice.service` שלה (M13, מוזג יום 3) מתמלל אודיו→טקסט ומזין את `ai.service`. אני **לא** נוגעת ב-`voice.service`/`voice.controller`. לסכם פורמט קלט/פלט מראש כך שה-wizard של Yael (M15, יום 4) יחבר את שני ה-endpoints.
+- תוכן: `server/utils/recipeSchema.js` · `server/services/ai.service.js` (חילוץ JSON מ-PDF/תמונה/Word `.docx` לפי `recipeSchema`, Structured Outputs) · `ai.controller.js` + `routes/ai.routes.js`, שימוש ב-`upload.middleware` · `POST /api/ai/extract` — מקבל קובץ אחד, מחזיר JSON מתכון מובנה.
+- **חילוץ טקסט לפי סוג קובץ:** PDF parser · OCR לתמונה · `mammoth` (או דומה) ל-`.docx` · ואז LLM עם schema.
+- **חוזה עם Yael (לא חוסם):** לסכם פורמט request/response של `POST /api/ai/extract` כך שה-wizard של Yael (M15, יום 4) שולח קובץ ומקבל JSON לתצוגה מקדימה — **endpoint אחד**, בלי `voice.service`.
 
-**Deliverable:** משתמש מנהל מתכונים מלא בלקוח + ה-AI מחלץ מתכון מובנה מטקסט/PDF/תמונה בשרת.
+**Deliverable:** משתמש מנהל מתכונים מלא בלקוח + ה-AI מחלץ מתכון מובנה מ-PDF/תמונה/Word בשרת.
 
 ---
 
@@ -196,6 +197,5 @@
 
 1. **M2 (`auth.middleware`, יום 1)** — קריטי מוקדם; גם Recipes שלי (M6) וגם Categories של Yael (M5) בנויות עליו, ו-Yael ממתינה לו ל-OAuth (M4). לו"ז הדוק מול M1 — לסיים מהר.
 2. **M1 (upload, של Yael, יום 1)** — אני ממתינה לו ל-Auth שרת (deps) ול-AI server (M10).
-3. **חוזה AI↔Voice (יום 3)** — `voice.service` של Yael (M13) מזין את `ai.service` שלי (M10); `voice.service` בבעלות Yael בלבד. הענף `feature/ai-import` משותף — לשמור על חלוקת קבצים (`ai.`* שלי, `voice.*` + wizard של Yael).
+3. **חוזה `POST /api/ai/extract` (יום 3)** — ה-wizard של Yael (M15) שולח קובץ (PDF/תמונה/Word) ומקבל JSON; אין `voice.service` ל-AI Import.
 4. **M11 (`cooking.component` של Yael, יום 4)** — אני ממתינה לו לפני `cooking-stt.service` (M14); להגדיר מראש את דגל "TTS מדבר" כדי למנוע echo.
-

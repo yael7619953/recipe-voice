@@ -19,7 +19,7 @@
 - `server/app.js` — שרת Express בסיסי עם `cors`, `express.json`, חיבור DB (`config/db.js`) ו-route בודד `GET /`.
 - `server/models/` — שלוש סכמות Mongoose מוכנות: `user`, `category`, `recipe` (refs באותיות קטנות).
 - `client/` — פרויקט Angular 21 ריק: `app.routes.ts` ו-`app.config.ts` ללא תוכן ממשי.
-- תלות חסרה בצד שרת: `jsonwebtoken`, `bcrypt`, `multer`, `passport`/Google OAuth, ספריות Voice ו-LLM. תלות חסרה בצד לקוח: `@ngx-translate/core`, `@ngx-translate/http-loader`.
+- תלות חסרה בצד שרת: `jsonwebtoken`, `bcrypt`, `multer`, `passport`/Google OAuth, ספריות LLM וחילוץ מסמכים (PDF/OCR/docx). תלות חסרה בצד לקוח: `@ngx-translate/core`, `@ngx-translate/http-loader`.
 
 ---
 
@@ -39,26 +39,23 @@ server/
     user.controller.js
     category.controller.js
     recipe.controller.js
-    voice.controller.js       # 2 endpoints: חילוץ מתכון מהקלטה (AI Import) + זיהוי פקודה קצרה (מצב בישול)
     ai.controller.js
   services/                   # לוגיקה עסקית, מנותקת מ-Express
     auth.service.js
     category.service.js       # כולל לוגיקת היררכיית parentCategory
     recipe.service.js
-    voice.service.js          # STT (Whisper) + TTS להקראת שלבי הכנה
-    ai.service.js             # חילוץ JSON מ-PDF/תמונה/הקלטה קולית
+    ai.service.js             # חילוץ JSON מ-PDF/תמונה/Word (.docx)
   routes/
     index.js                  # aggregator: app.use('/api', router)
     auth.routes.js
     user.routes.js
     category.routes.js
     recipe.routes.js
-    voice.routes.js
     ai.routes.js
   middleware/
     auth.middleware.js        # אימות JWT
     error.middleware.js       # error handler מרכזי
-    upload.middleware.js      # multer ל-PDF/תמונה/אודיו
+    upload.middleware.js      # multer ל-PDF/תמונה/Word (.docx)
     validate.middleware.js    # ולידציה (express-validator / zod)
   utils/
     jwt.js
@@ -79,14 +76,14 @@ client/src/app/
     interceptors/  jwt.interceptor.ts       # הזרקת Authorization header
                    error.interceptor.ts
     services/      auth.service.ts, recipe.service.ts, category.service.ts,
-                   voice.service.ts, ai.service.ts
+                   ai.service.ts
     models/        recipe.model.ts, category.model.ts, user.model.ts
   features/        # כל פיצ'ר עם lazy loaded routes משלו
     auth/          login / register / oauth-callback
     recipes/       list / detail / form
     cooking/       cooking-mode (הקראת שלבים ב-TTS + טיימרים ויזואליים + האזנה רציפה לפקודות STT)
     categories/    ניהול קטגוריות היררכי
-    ai-import/     wizard: העלאת PDF/תמונה/הקלטה קולית חיה -> תצוגה מקדימה לעריכה -> שמירה
+    ai-import/     wizard: העלאת PDF/תמונה/Word (.docx) -> תצוגה מקדימה לעריכה -> שמירה
   shared/          components/ pipes/ directives/   # rtl.directive וכו'
   i18n/            (assets/i18n/he.json, en.json)
 ```
@@ -103,7 +100,7 @@ flowchart TD
     P1 --> P2[Phase 2: CRUD Categories + Recipes]
     P2 --> P3[Phase 3: i18n + RTL/LTR]
     P3 --> P4[Phase 4: טיימרים + TTS + STT רציף במצב בישול]
-    P2 --> P5[Phase 5: AI Import + הקלטה קולית]
+    P2 --> P5[Phase 5: AI Import מקבצים]
     P4 --> P6[Phase 6: ליטוש + CI/CD מלא]
     P5 --> P6
 ```
@@ -113,7 +110,7 @@ flowchart TD
 - **Phase 2 — CRUD**: Categories (כולל היררכיית `parentCategory` ובניית עץ) ואז Recipes (עם `instructions[].timer`). כל הנתיבים מוגנים ב-JWT ומסוננים לפי `userId`.
 - **Phase 3 — i18n + RTL/LTR**: קבצי `he.json`/`en.json`, החלפת שפה דינמית, החלפת `dir`/`lang` על `<html>`, התאמות סגנון RTL.
 - **Phase 4 — טיימרים + TTS + STT במצב בישול**: המערכת מקריאה בקול את שלבי ההכנה (TTS) ובמקביל המיקרופון מאזין ברציפות לפקודות שליטה בהקראה — "עצור"/"המשך"/"קודם" (וכן "הבא"), וכן stop/continue/previous/next באנגלית — עם אינדיקטור ויזואלי שהמיקרופון פעיל; כפתור toggle בולט להפעלה/כיבוי של ההאזנה. בנוסף, טיימרים ויזואליים לכל שלב עם `hasTimer: true`.
-- **Phase 5 — AI Import (זרימה אג'נטית)**: wizard עם שלב העלאה בו שלוש אפשרויות — PDF, תמונה, ו**הקלטה קולית חיה** (המשתמש מכתיב את המתכון). PDF/תמונה/אודיו -> חילוץ טקסט (PDF parser / OCR / Whisper) -> LLM עם Structured Output לפי `recipeSchema` -> תצוגה מקדימה לעריכה -> שמירה ב-DB. כל טיפול האודיו הקולי מתבצע כאן כחלק מהזרימה האג'נטית. (תלוי רק ב-Phase 2.)
+- **Phase 5 — AI Import (קבצים בלבד)**: wizard עם שלב העלאה בו שלוש אפשרויות — PDF, תמונה, ו-Word (`.docx`). קובץ -> חילוץ טקסט (PDF parser / OCR / mammoth ל-docx) -> LLM עם Structured Output לפי `recipeSchema` -> תצוגה מקדימה לעריכה -> שמירה ב-DB. **אין הקלטה קולית לייבוא מתכונים.** (תלוי רק ב-Phase 2.)
 - **Phase 6 — ליטוש + CI/CD**: בדיקות, כיסוי, pipeline מלא (lint/build/test/deploy), תיעוד.
 
 ---
@@ -157,7 +154,7 @@ flowchart TD
 - **M1 — Foundation**: תשתית + Auth מלא (כולל Google OAuth) עובד מקצה לקצה.
 - **M2 — Core Data**: CRUD מלא ל-Categories (היררכי) ו-Recipes + i18n/RTL.
 - **M3 — Cooking Kitchen**: הקראת שלבים ב-TTS + האזנה רציפה לפקודות STT + טיימרים ויזואליים פעילים במצב בישול.
-- **M4 — AI + Release**: AI Import (כולל הקלטה קולית חיה) עובד, CI/CD מלא, תיעוד וגרסה ל-`main`.
+- **M4 — AI + Release**: AI Import מקבצים (PDF/תמונה/Word) עובד, CI/CD מלא, תיעוד וגרסה ל-`main`.
 
 ### CI/CD — GitHub Actions (`.github/workflows/`)
 
@@ -177,8 +174,7 @@ flowchart TD
 ### Voice — TTS + STT דו-לשוני
 
 - **TTS להקראת שלבים (מצב בישול)**: הקראה בקול של שלבי ההכנה בעברית ובאנגלית. מומלץ Web Speech API (`speechSynthesis`) בדפדפן להקראה מיידית ללא עלות, עם אפשרות נפילה ל-TTS בצד שרת (למשל OpenAI TTS / Google Cloud TTS) לאיכות קול עקבית. בחירת קול ושפה לפי שפת הממשק הנוכחית.
-- **STT לחילוץ מתכון (AI Import)**: OpenAI **Whisper** (`whisper-1`) בצד שרת — תמיכה רב-לשונית מצוינת כולל עברית; מקבל את ההקלטה הקולית החיה, מתמלל, וה-AI מחלץ ממנה מבנה מתכון מלא לפי `recipeSchema`.
-- **STT לפקודות שליטה בהקראה (מצב בישול)**: זיהוי פקודה קצרה בלבד — "עצור"/"המשך"/"קודם"/"הבא", וכן stop/continue/previous/next. מומלץ Web Speech API בדפדפן להאזנה רציפה בזמן-אמת ללא עלות, עם נפילה ל-Whisper בשרת לאיכות עקבית בעברית. שילוב TTS+STT דורש ניהול מצב כדי למנוע מהמיקרופון לזהות את קול ההקראה (echo) — למשל השהיית ההאזנה בזמן הקראה פעילה.
+- **STT לפקודות שליטה בהקראה (מצב בישול)**: זיהוי פקודה קצרה בלבד — "עצור"/"המשך"/"קודם"/"הבא", וכן stop/continue/previous/next. מומלץ Web Speech API בדפדפן להאזנה רציפה בזמן-אמת ללא עלות. שילוב TTS+STT דורש ניהול מצב כדי למנוע מהמיקרופון לזהות את קול ההקראה (echo) — למשל השהיית ההאזנה בזמן הקראה פעילה.
 
 ### Google OAuth ב-Angular
 
@@ -187,7 +183,7 @@ flowchart TD
 ### Structured Outputs (AI Import)
 
 - שימוש ב-Structured Outputs / JSON Schema של ה-LLM כדי לאלץ פלט תואם בדיוק ל-`recipeSchema` (כותרת, רכיבים, `instructions[{text, timer{duration, hasTimer}}]`, prepTime וכו').
-- צינור: `multer` קולט PDF/תמונה/אודיו -> חילוץ טקסט (PDF parser / OCR / Whisper לאודיו) -> LLM עם schema -> ולידציה -> תצוגה מקדימה לעריכת המשתמש -> שמירה.
+- צינור: `multer` קולט PDF/תמונה/Word (`.docx`) -> חילוץ טקסט (PDF parser / OCR / mammoth) -> LLM עם schema -> ולידציה -> תצוגה מקדימה לעריכת המשתמש -> שמירה.
 
 ### RTL/LTR דינמי
 

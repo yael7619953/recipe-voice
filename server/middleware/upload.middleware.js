@@ -15,6 +15,7 @@ const EXTENSIONS = {
   pdf: ['.pdf'],
   image: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tif', '.tiff', '.heic', '.heif'],
   audio: ['.webm', '.mp3', '.wav', '.m4a'],
+  docx: ['.docx'],
 };
 
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -44,6 +45,12 @@ export function isAllowedFile(file, categories) {
           mimetype.startsWith('audio/') ||
           (mimetype === 'video/webm' && hasExtension(originalname, ['.webm'])) ||
           hasExtension(originalname, EXTENSIONS.audio)
+        );
+      case 'docx':
+        return (
+          mimetype ===
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+          hasExtension(originalname, EXTENSIONS.docx)
         );
       default:
         return false;
@@ -93,3 +100,4 @@ export const uploadPdf = singleUpload('pdf', 'file');
 export const uploadImage = singleUpload('image', 'file');
 export const uploadAudio = singleUpload('audio', 'audio');
 export const uploadMedia = singleUpload(['pdf', 'image', 'audio'], 'file');
+export const uploadAiMedia = singleUpload(['pdf', 'image', 'docx'], 'file');
