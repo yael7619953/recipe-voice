@@ -1,13 +1,25 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { Recipe } from '../../../core/models/recipe.model';
+import { CookingTtsService } from '../services/cooking-tts.service';
 
 /**
- * Owns the focused cooking screen: loads a recipe by `recipeId` and walks the
- * cook through one instruction step at a time with manual navigation.
+ * Owns the focused cooking screen: loads a recipe by `recipeId`, walks the
+ * cook through one instruction step at a time and reads it aloud (TTS).
+ *
+ * Publishes the {@link isTtsSpeaking} state so the STT layer (added later) can
+ * mute the microphone while the app talks and avoid echo.
  */
 @Component({
   selector: 'app-cooking',
@@ -15,13 +27,15 @@ import { Recipe } from '../../../core/models/recipe.model';
   imports: [TranslatePipe, RouterLink],
   templateUrl: './cooking.component.html',
   styleUrl: './cooking.component.scss',
+  providers: [CookingTtsService],
   host: { '[attr.dir]': 'dir()' },
 })
-export class CookingComponent implements OnInit {
+export class CookingComponent implements OnInit, OnDestroy {
   private recipeService = inject(RecipeService);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
+  private tts = inject(CookingTtsService);
 
   readonly recipe = signal<Recipe | null>(null);
   readonly loading = signal(true);
@@ -34,6 +48,14 @@ export class CookingComponent implements OnInit {
   readonly currentStep = computed(() => this.steps()[this.currentStepIndex()] ?? null);
   readonly isFirstStep = computed(() => this.currentStepIndex() === 0);
   readonly isLastStep = computed(() => this.currentStepIndex() >= this.totalSteps() - 1);
+
+  /**
+   * State contract for the STT layer (Shira, M14): true while the app is
+   * actively reading a step aloud. Used to pause the microphone (echo guard).
+   */
+  readonly isTtsSpeaking = this.tts.active;
+  readonly ttsPaused = this.tts.paused;
+  readonly ttsSupported = this.tts.supported;
 
   readonly dir = computed(() => (this.translate.currentLang() === 'en' ? 'ltr' : 'rtl'));
 
@@ -60,6 +82,10 @@ export class CookingComponent implements OnInit {
       });
   }
 
+  ngOnDestroy(): void {
+    this.tts.stop();
+  }
+
   next(): void {
     if (this.isLastStep()) {
       return;
@@ -76,5 +102,25 @@ export class CookingComponent implements OnInit {
 
   goToStep(index: number): void {
     this.currentStepIndex.set(index);
+    this.speakCurrentStep();
+  }
+
+  speakCurrentStep(): void {
+    const step = this.currentStep();
+    if (step) {
+      this.tts.speak(step.text);
+    }
+  }
+
+  pauseSpeech(): void {
+    this.tts.pause();
+  }
+
+  resumeSpeech(): void {
+    this.tts.resume();
+  }
+
+  stopSpeech(): void {
+    this.tts.stop();
   }
 }

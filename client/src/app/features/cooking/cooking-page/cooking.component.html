@@ -28,10 +28,24 @@
       <div class="progress-bar__fill" [style.inline-size.%]="((currentStepIndex() + 1) / totalSteps()) * 100"></div>
     </div>
 
-    <article class="step-card">
+    <article class="step-card" [class.step-card--speaking]="isTtsSpeaking()">
       <span class="step-number">{{ 'RECIPES.STEP' | translate }} {{ currentStepIndex() + 1 }}</span>
       <p class="step-text">{{ currentStep().text }}</p>
     </article>
+
+    @if (ttsSupported) {
+      <div class="tts-controls" role="group" [attr.aria-label]="'COOKING.TTS' | translate">
+        <button type="button" class="tts-btn" (click)="speakCurrentStep()">
+          🔊 {{ 'COOKING.READ_ALOUD' | translate }}
+        </button>
+        @if (isTtsSpeaking()) {
+          <button type="button" class="tts-btn" (click)="pauseSpeech()">⏸ {{ 'COOKING.PAUSE' | translate }}</button>
+        } @else if (ttsPaused()) {
+          <button type="button" class="tts-btn" (click)="resumeSpeech()">▶ {{ 'COOKING.RESUME' | translate }}</button>
+        }
+        <button type="button" class="tts-btn" (click)="stopSpeech()">⏹ {{ 'COOKING.STOP' | translate }}</button>
+      </div>
+    }
 
     <nav class="step-nav">
       <button type="button" class="nav-btn" [disabled]="isFirstStep()" (click)="previous()">

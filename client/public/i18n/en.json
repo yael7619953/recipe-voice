@@ -112,6 +112,11 @@
     "EXIT": "Exit cooking",
     "STEP_OF": "Step {{current}} of {{total}}",
     "NO_STEPS": "This recipe has no steps to cook.",
+    "TTS": "Read-aloud controls",
+    "READ_ALOUD": "Read aloud",
+    "PAUSE": "Pause",
+    "RESUME": "Resume",
+    "STOP": "Stop",
     "PREVIOUS": "Previous",
     "NEXT": "Next"
   },
