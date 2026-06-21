@@ -1,0 +1,117 @@
+<div class="form-page">
+  <header class="form-header">
+    <a class="btn-back" routerLink="/recipes">← {{ 'RECIPES.BACK' | translate }}</a>
+    <h1 class="form-title">
+      {{ (isEdit() ? 'RECIPES.FORM.TITLE_EDIT' : 'RECIPES.FORM.TITLE_NEW') | translate }}
+    </h1>
+  </header>
+
+  @if (loadingRecipe()) {
+    <p class="status-msg">{{ 'RECIPES.LOADING' | translate }}</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="form-card">
+
+      @if (errorKey()) {
+        <div class="server-error" role="alert">{{ errorKey()! | translate }}</div>
+      }
+
+      <!-- Title -->
+      <div class="field">
+        <label for="title">{{ 'RECIPES.FORM.FIELD.TITLE' | translate }} *</label>
+        <input id="title" type="text" formControlName="title"
+          [class.invalid]="form.get('title')!.invalid && form.get('title')!.touched" />
+        @if (form.get('title')!.invalid && form.get('title')!.touched) {
+          <span class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="field">
+        <label for="description">{{ 'RECIPES.FORM.FIELD.DESCRIPTION' | translate }}</label>
+        <textarea id="description" formControlName="description" rows="2"></textarea>
+      </div>
+
+      <!-- Prep time -->
+      <div class="field-row">
+        <div class="field field--small" formGroupName="prepTime">
+          <label for="prepHours">{{ 'RECIPES.FORM.FIELD.PREP_HOURS' | translate }}</label>
+          <input id="prepHours" type="number" formControlName="hours" min="0" />
+        </div>
+        <div class="field field--small" formGroupName="prepTime">
+          <label for="prepMinutes">{{ 'RECIPES.FORM.FIELD.PREP_MINUTES' | translate }}</label>
+          <input id="prepMinutes" type="number" formControlName="minutes" min="0" max="59" />
+        </div>
+        <div class="field field--small">
+          <label for="servings">{{ 'RECIPES.FORM.FIELD.SERVINGS' | translate }}</label>
+          <input id="servings" type="text" formControlName="servings" />
+        </div>
+      </div>
+
+      <!-- Ingredients -->
+      <fieldset class="fieldset" formArrayName="ingredients">
+        <legend>{{ 'RECIPES.FORM.FIELD.INGREDIENTS' | translate }}</legend>
+        @for (ctrl of ingredientsArray.controls; track $index) {
+          <div class="array-row">
+            <input type="text" [formControlName]="$index"
+              [placeholder]="'RECIPES.FORM.FIELD.INGREDIENT_PH' | translate"
+              [class.invalid]="ctrl.invalid && ctrl.touched" />
+            @if (ingredientsArray.length > 1) {
+              <button type="button" class="btn-remove" (click)="removeIngredient($index)" aria-label="הסר">✕</button>
+            }
+          </div>
+        }
+        <button type="button" class="btn-add" (click)="addIngredient()">+ {{ 'RECIPES.FORM.ADD_INGREDIENT' | translate }}</button>
+      </fieldset>
+
+      <!-- Instructions -->
+      <fieldset class="fieldset" formArrayName="instructions">
+        <legend>{{ 'RECIPES.FORM.FIELD.INSTRUCTIONS' | translate }}</legend>
+        @for (ctrl of instructionsArray.controls; track $index) {
+          <div class="step-row" [formGroupName]="$index">
+            <span class="step-num">{{ $index + 1 }}</span>
+            <div class="step-fields">
+              <textarea formControlName="text" rows="2"
+                [placeholder]="'RECIPES.FORM.FIELD.INSTRUCTION_PH' | translate"
+                [class.invalid]="ctrl.get('text')!.invalid && ctrl.get('text')!.touched"></textarea>
+
+              <div class="timer-row" formGroupName="timer">
+                <label class="checkbox-label">
+                  <input type="checkbox" formControlName="hasTimer" />
+                  {{ 'RECIPES.FORM.FIELD.HAS_TIMER' | translate }}
+                </label>
+                @if (stepTimerGroup(ctrl).get('hasTimer')!.value) {
+                  <div class="field field--small">
+                    <label>{{ 'RECIPES.FORM.FIELD.TIMER_DURATION' | translate }}</label>
+                    <input type="number" formControlName="duration" min="0" />
+                  </div>
+                }
+              </div>
+            </div>
+            @if (instructionsArray.length > 1) {
+              <button type="button" class="btn-remove" (click)="removeStep($index)" aria-label="הסר">✕</button>
+            }
+          </div>
+        }
+        <button type="button" class="btn-add" (click)="addStep()">+ {{ 'RECIPES.FORM.ADD_STEP' | translate }}</button>
+      </fieldset>
+
+      <!-- Notes -->
+      <div class="field">
+        <label for="notes">{{ 'RECIPES.FORM.FIELD.NOTES' | translate }}</label>
+        <textarea id="notes" formControlName="notes" rows="2"></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <a class="btn-secondary" routerLink="/recipes">{{ 'RECIPES.FORM.CANCEL' | translate }}</a>
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ 'RECIPES.FORM.SAVE' | translate }}
+        </button>
+      </div>
+
+    </form>
+  }
+</div>

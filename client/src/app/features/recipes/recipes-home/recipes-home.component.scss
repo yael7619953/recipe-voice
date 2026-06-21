@@ -1,14 +1,149 @@
-.recipes-home {
-  padding: 2rem;
-  max-width: 48rem;
+.recipes-page {
+  max-width: 800px;
   margin-inline: auto;
+  padding: 2rem 1rem;
 }
 
-h1 {
-  font-size: 1.5rem;
-  margin-block-end: 0.75rem;
+.recipes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: 1.75rem;
 }
 
-p {
-  color: #555;
+.recipes-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.btn-primary {
+  padding: 0.55rem 1.1rem;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #4f46e5;
+  }
+}
+
+.status-msg {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem 0;
+
+  &.error {
+    color: #b91c1c;
+  }
+}
+
+.recipe-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.recipe-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border-color: #6366f1;
+    outline: none;
+  }
+
+  &__title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.25rem;
+  }
+
+  &__desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    margin-inline-start: 1rem;
+  }
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.12s;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+
+  &--danger:hover {
+    background: #fef2f2;
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-block-start: 1.5rem;
+
+  button {
+    padding: 0.4rem 0.8rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.12s;
+
+    &:hover:not(:disabled) {
+      background: #f3f4f6;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  span {
+    font-size: 0.9rem;
+    color: #374151;
+  }
 }

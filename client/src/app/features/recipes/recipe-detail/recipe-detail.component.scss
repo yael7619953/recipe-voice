@@ -1,0 +1,160 @@
+.detail-page {
+  max-width: 720px;
+  margin-inline: auto;
+  padding: 2rem 1rem;
+}
+
+.status-msg {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem 0;
+
+  &.error {
+    color: #b91c1c;
+  }
+}
+
+.btn-back {
+  font-size: 0.875rem;
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: 1.5rem;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.btn-secondary {
+  padding: 0.45rem 0.9rem;
+  border: 1.5px solid #6366f1;
+  color: #6366f1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #ede9fe;
+  }
+}
+
+.btn-danger {
+  padding: 0.45rem 0.9rem;
+  background: transparent;
+  border: 1.5px solid #ef4444;
+  color: #ef4444;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #fef2f2;
+  }
+}
+
+.detail-body {
+  background: #fff;
+  border-radius: 12px;
+  border: 1.5px solid #e5e7eb;
+  padding: 1.75rem;
+}
+
+.detail-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.5rem;
+}
+
+.detail-desc {
+  color: #6b7280;
+  font-size: 1rem;
+  margin-block-end: 1rem;
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1.5rem;
+}
+
+.meta-chip {
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.detail-section {
+  margin-block-end: 1.5rem;
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-block-end: 0.75rem;
+    padding-block-end: 0.4rem;
+    border-block-end: 1px solid #f3f4f6;
+  }
+}
+
+.ingredient-list {
+  list-style: disc;
+  padding-inline-start: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.step-list {
+  list-style: decimal;
+  padding-inline-start: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.step-item {
+  p {
+    margin: 0 0 0.25rem;
+    color: #1f2937;
+    line-height: 1.55;
+  }
+}
+
+.timer-badge {
+  display: inline-block;
+  background: #fef9c3;
+  border: 1px solid #fbbf24;
+  color: #92400e;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.55rem;
+}
+
+.detail-notes {
+  color: #6b7280;
+  font-style: italic;
+  line-height: 1.6;
+}

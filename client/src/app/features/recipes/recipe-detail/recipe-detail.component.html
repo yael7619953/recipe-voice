@@ -1,0 +1,63 @@
+<div class="detail-page">
+  @if (loading()) {
+    <p class="status-msg">{{ 'RECIPES.LOADING' | translate }}</p>
+  } @else if (errorKey() || !recipe()) {
+    <p class="status-msg error" role="alert">{{ (errorKey() ?? 'RECIPES.ERROR.NOT_FOUND') | translate }}</p>
+    <a class="btn-back" routerLink="/recipes">{{ 'RECIPES.BACK' | translate }}</a>
+  } @else {
+    <header class="detail-header">
+      <a class="btn-back" routerLink="/recipes">← {{ 'RECIPES.BACK' | translate }}</a>
+      <div class="detail-actions">
+        <a class="btn-secondary" [routerLink]="['/recipes', recipe()!._id, 'edit']">{{ 'RECIPES.EDIT' | translate }}</a>
+        <button class="btn-danger" (click)="delete()">{{ 'RECIPES.DELETE' | translate }}</button>
+      </div>
+    </header>
+
+    <article class="detail-body">
+      <h1 class="detail-title">{{ recipe()!.title }}</h1>
+
+      @if (recipe()!.description) {
+        <p class="detail-desc">{{ recipe()!.description }}</p>
+      }
+
+      <div class="detail-meta">
+        @if (recipe()!.prepTime.hours > 0 || recipe()!.prepTime.minutes > 0) {
+          <span class="meta-chip">⏱ {{ formatPrepTime(recipe()!.prepTime.hours, recipe()!.prepTime.minutes) }}</span>
+        }
+        @if (recipe()!.servings) {
+          <span class="meta-chip">🍽 {{ recipe()!.servings }} {{ 'RECIPES.SERVINGS' | translate }}</span>
+        }
+      </div>
+
+      <section class="detail-section">
+        <h2>{{ 'RECIPES.INGREDIENTS' | translate }}</h2>
+        <ul class="ingredient-list">
+          @for (item of recipe()!.ingredients; track $index) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      </section>
+
+      <section class="detail-section">
+        <h2>{{ 'RECIPES.INSTRUCTIONS' | translate }}</h2>
+        <ol class="step-list">
+          @for (step of recipe()!.instructions; track $index) {
+            <li class="step-item">
+              <p>{{ step.text }}</p>
+              @if (step.timer.hasTimer) {
+                <span class="timer-badge">⏲ {{ formatTimer(step.timer.duration) }}</span>
+              }
+            </li>
+          }
+        </ol>
+      </section>
+
+      @if (recipe()!.notes) {
+        <section class="detail-section">
+          <h2>{{ 'RECIPES.NOTES' | translate }}</h2>
+          <p class="detail-notes">{{ recipe()!.notes }}</p>
+        </section>
+      }
+    </article>
+  }
+</div>
