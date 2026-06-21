@@ -4,6 +4,35 @@
     <a class="btn-primary" routerLink="/recipes/new">{{ 'RECIPES.NEW' | translate }}</a>
   </header>
 
+  <div class="filter-bar">
+    <input
+      class="filter-search"
+      type="search"
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="applyFilters()"
+      [placeholder]="'RECIPES.FILTER.SEARCH_PH' | translate"
+      aria-label="{{ 'RECIPES.FILTER.SEARCH_PH' | translate }}"
+    />
+
+    <select
+      class="filter-category"
+      [(ngModel)]="selectedCategory"
+      (ngModelChange)="applyFilters()"
+      aria-label="{{ 'RECIPES.FILTER.CATEGORY' | translate }}"
+    >
+      <option value="">{{ 'RECIPES.FILTER.ALL' | translate }}</option>
+      @for (cat of categoryService.categories(); track cat._id) {
+        <option [value]="cat._id">{{ cat.icon }} {{ cat.name }}</option>
+      }
+    </select>
+
+    @if (hasActiveFilters) {
+      <button class="btn-clear" type="button" (click)="clearFilters()">
+        {{ 'RECIPES.FILTER.CLEAR' | translate }}
+      </button>
+    }
+  </div>
+
   @if (loading()) {
     <p class="status-msg">{{ 'RECIPES.LOADING' | translate }}</p>
   } @else if (errorKey()) {
