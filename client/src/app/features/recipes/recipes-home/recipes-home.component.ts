@@ -1,18 +1,21 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CategoryService } from '../../../core/services/category.service';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
   selector: 'app-recipes-home',
-  imports: [TranslatePipe, RouterLink],
+  imports: [TranslatePipe, RouterLink, FormsModule],
   templateUrl: './recipes-home.component.html',
   styleUrl: './recipes-home.component.scss',
 })
 export class RecipesHomeComponent implements OnInit {
   private recipeService = inject(RecipeService);
+  readonly categoryService = inject(CategoryService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
@@ -22,7 +25,15 @@ export class RecipesHomeComponent implements OnInit {
   page = signal(1);
   totalPages = signal(1);
 
+  searchQuery = signal('');
+  selectedCategory = signal('');
+
+  get hasActiveFilters(): boolean {
+    return !!this.searchQuery() || !!this.selectedCategory();
+  }
+
   ngOnInit(): void {
+    this.categoryService.load().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
     this.loadPage(1);
   }
 
@@ -31,7 +42,7 @@ export class RecipesHomeComponent implements OnInit {
     this.errorKey.set(null);
 
     this.recipeService
-      .list(p)
+      .list(p, 20, { q: this.searchQuery(), category: this.selectedCategory() })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -45,6 +56,16 @@ export class RecipesHomeComponent implements OnInit {
           this.loading.set(false);
         },
       });
+  }
+
+  applyFilters(): void {
+    this.loadPage(1);
+  }
+
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.selectedCategory.set('');
+    this.loadPage(1);
   }
 
   navigateTo(id: string): void {

@@ -63,6 +63,12 @@
     "TITLE": "My recipes",
     "NEW": "New recipe",
     "EMPTY": "No recipes yet. Add your first one!",
+    "FILTER": {
+      "SEARCH_PH": "Search by name…",
+      "CATEGORY": "Filter by category",
+      "ALL": "All categories",
+      "CLEAR": "Clear filters"
+    },
     "LOADING": "Loading...",
     "FAVORITE": "Favorite",
     "EDIT": "Edit",

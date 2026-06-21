@@ -193,6 +193,56 @@
 
 ---
 
+---
+
+## פיצ'ר נוסף — Recipe Search & Categories Form
+
+### משימה A — חיפוש וסינון מתכונים (recipes-home)
+
+- **ענף Git:** `feature/recipe-search-filter`
+- **⏸️ ממתינה ל:** M9 (Recipes UI) + M12 (Categories UI של Yael) — שניהם כבר זמינים.
+- **MERGE שלי:** M19
+- **מה:** הוספת שורת סינון מעל רשימת המתכונים ב-`recipes-home`:
+  - שדה חיפוש חופשי לפי שם מתכון (query param `q`)
+  - תפריט בחירת קטגוריה (query param `category`) — מציג רק קטגוריות של המשתמש המחובר
+  - כפתור "נקה סינון" שמופיע כשיש פילטר פעיל
+  - החיפוש מתבצע ב-Server (השרת כבר תומך ב-`q`, `category` ב-`GET /api/recipes`)
+- **קבצים:**
+  - `client/src/app/core/services/recipe.service.ts` — הרחבת `list()` עם params: `{ q?, category? }`
+  - `client/src/app/features/recipes/recipes-home/recipes-home.component.ts` — הזרקת `CategoryService`, signals: `searchQuery`, `selectedCategory`; מתודות: `applyFilters()`, `clearFilters()`
+  - `client/src/app/features/recipes/recipes-home/recipes-home.component.html` — שורת `.filter-bar` עם `<input>`, `<select>`, כפתור ניקוי
+  - `client/src/app/features/recipes/recipes-home/recipes-home.component.scss` — עיצוב `.filter-bar`, `.filter-search`, `.filter-category`, `.btn-clear`
+
+### משימה B — בחירת קטגוריות בטופס מתכון (recipe-form)
+
+- **ענף Git:** `feature/recipe-search-filter`
+- **⏸️ ממתינה ל:** M9 + M12 — כבר זמינים.
+- **MERGE שלי:** M19 (יחד עם משימה A)
+- **מה:** הוספת שדה קטגוריות לטופס יצירה/עריכת מתכון:
+  - רשימת chips (לחצני toggle) מקטגוריות קיימות של היוזר — ניתן לבחור כמה
+  - שמירה ב-`categories[]` שב-`RecipeDraft` — נשלח לשרת בשמירה
+  - שחזור ב-`patchForm` בעת עריכה (מציג את הקטגוריות שכבר שויכו)
+  - טופס מיני "הוסף קטגוריה חדשה" — שם בלבד; הצבע והאייקון ברירת מחדל (`#cccccc`, `🏷️`); לאחר שמירה הקטגוריה נבחרת אוטומטית
+- **קבצים:**
+  - `client/src/app/features/recipes/recipe-form/recipe-form.component.ts` — הזרקת `CategoryService`; הוספת `categories` control לטופס; מתודות: `toggleCategory()`, `isCategorySelected()`, `addNewCategory()`; signals: `showNewCategoryForm`, `newCategoryName`, `savingCategory`
+  - `client/src/app/features/recipes/recipe-form/recipe-form.component.html` — סקשן `<!-- Categories -->` עם chips + טופס מיני inline
+  - `client/src/app/features/recipes/recipe-form/recipe-form.component.scss` — עיצוב `.category-chips`, `.category-chip`, `.category-chip--selected`, `.new-category-row`, `.new-category-input`
+
+### i18n
+
+- **קבצים:** `client/public/i18n/en.json` + `he.json`
+- **מפתחות חדשים:**
+  - `RECIPES.FILTER.SEARCH_PH`, `RECIPES.FILTER.CATEGORY`, `RECIPES.FILTER.ALL`, `RECIPES.FILTER.CLEAR`
+  - `RECIPES.FORM.FIELD.CATEGORIES`, `RECIPES.FORM.FIELD.ADD_CATEGORY`, `RECIPES.FORM.FIELD.CATEGORY_NAME_PH`, `RECIPES.FORM.FIELD.SAVE_CATEGORY`
+
+### לוח MERGE (עדכון)
+
+| #       | ענף                          | מי    | תנאי                          | מי ממתין לו |
+| ------- | ---------------------------- | ----- | ----------------------------- | ----------- |
+| **M19** | `feature/recipe-search-filter` | Shira | M9 + M12 (כבר זמינים) | — |
+
+---
+
 ## סיכום תלויות שחשוב לי לזכור
 
 1. **M2 (`auth.middleware`, יום 1)** — קריטי מוקדם; גם Recipes שלי (M6) וגם Categories של Yael (M5) בנויות עליו, ו-Yael ממתינה לו ל-OAuth (M4). לו"ז הדוק מול M1 — לסיים מהר.

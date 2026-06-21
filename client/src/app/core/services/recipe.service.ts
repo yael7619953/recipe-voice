@@ -9,8 +9,14 @@ const API = '/api/recipes';
 export class RecipeService {
   private http = inject(HttpClient);
 
-  list(page = 1, limit = 20): Observable<RecipeListResponse> {
-    const params = new HttpParams().set('page', page).set('limit', limit);
+  list(
+    page = 1,
+    limit = 20,
+    filters: { q?: string; category?: string } = {},
+  ): Observable<RecipeListResponse> {
+    let params = new HttpParams().set('page', page).set('limit', limit);
+    if (filters.q?.trim()) params = params.set('q', filters.q.trim());
+    if (filters.category) params = params.set('category', filters.category);
     return this.http.get<RecipeListResponse>(API, { params });
   }
 
