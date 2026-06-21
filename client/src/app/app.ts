@@ -1,20 +1,12 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
-import { AuthService } from './core/services/auth.service';
+import { Component, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TranslatePipe],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.scss',
+  styleUrl: './app.scss'
 })
 export class App {
-  protected authService = inject(AuthService);
-  private router = inject(Router);
-
-  logout(): void {
-    this.authService.logout();
-    void this.router.navigateByUrl('/auth/login');
-  }
+  protected readonly title = signal('client');
 }
