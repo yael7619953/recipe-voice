@@ -7,12 +7,12 @@
 ## TL;DR — יעל במבט אחד
 
 
-|                                     |                                                                                                                                                                                                 |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **מי אני**                          | תשתית שרת+לקוח · Google OAuth · Categories CRUD (שרת+UI) · `voice.service` בשרת (Whisper) — בלעדי · מצב בישול — `cooking.component` + TTS + טיימרים · AI Import wizard · חצי CI (server)        |
-| **ה-MERGE שלי**                     | M1 (יום 1, ~11:00) · M4 (יום 1, ~18:30) · M5 (יום 2, ~12:30) · M8 (יום 2, ~17:30) · M12 (יום 3, ~12:00) · M13 (יום 3, ~18:00) · M11 (יום 4, ~12:00) · M15 (יום 4, ~15:00) · M18 (יום 4, ~18:00) |
-| **למי אני ממתינה (חוסם, אותו יום)** | M2 (Shira, יום 1) לפני M4                                                                                                                                                                       |
-| **מי ממתין לי**                     | Shira: M2 (deps), M10 (upload), M14 · אני: M4, M12                                                                                                                                              |
+|                                     |                                                                                                                                                                                          |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **מי אני**                          | תשתית שרת+לקוח · Google OAuth · Categories CRUD (שרת+UI) · מצב בישול — `cooking.component` + TTS + טיימרים · AI Import wizard · חצי CI (server)                                          |
+| **ה-MERGE שלי**                     | M1 (יום 1, ~11:00) · M4 (יום 1, ~18:30) · M5 (יום 2, ~12:30) · M8 (יום 2, ~17:30) · M12 (יום 3, ~12:00) · M11 (יום 4, ~12:00) · M15 (יום 4, ~15:00) · M18 (יום 4, ~18:00) |
+| **למי אני ממתינה (חוסם, אותו יום)** | M2 (Shira, יום 1) לפני M4                                                                                                                                                                |
+| **מי ממתין לי**                     | Shira: M2 (deps), M10 (upload), M14 · אני: M4, M12                                                                                                                                       |
 
 
 ---
@@ -22,14 +22,14 @@
 חלוקת העבודה בין Yael ל-Shira בנויה כך ששתינו נוגעות גם בשרת וגם בלקוח, וכל אחת מכסה פיצ'רים שונים — כדי שבסוף הפרויקט שתינו עברנו על כל החלקים. כל תלות בין-אישית מנוהלת דרך **לוח MERGE משותף** (ראו למטה) — אין תלות סמויה.
 
 
-| צד         | הפיצ'רים שלי                                                                                                                                                                                                                                                     |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Server** | תשתית הרצה (wiring של `app.js`, `routes/index.js`, error + upload middleware, התקנת תלות) · Google OAuth (passport) · Categories CRUD (כולל לוגיקת היררכיית `parentCategory`) · `**voice.service.js` (Whisper STT) + `voice.controller`/`voice.routes` — בלעדי** |
-| **Client** | תשתית לקוח (ngx-translate base, providers) · ניהול Categories (UI עץ היררכי) · מצב בישול — `**cooking.component` + הקראת שלבים TTS + טיימרים ויזואליים** · AI Import **wizard**                                                                                  |
-| **משותף**  | חצי מ-CI (יחד עם Shira)                                                                                                                                                                                                                                          |
+| צד         | הפיצ'רים שלי                                                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Server** | תשתית הרצה (wiring של `app.js`, `routes/index.js`, error + upload middleware, התקנת תלות) · Google OAuth (passport) · Categories CRUD (כולל לוגיקת היררכיית `parentCategory`) |
+| **Client** | תשתית לקוח (ngx-translate base, providers) · ניהול Categories (UI עץ היררכי) · מצב בישול — `**cooking.component` + הקראת שלבים TTS + טיימרים ויזואליים** · AI Import **wizard** |
+| **משותף**  | חצי מ-CI (יחד עם Shira)                                                                                                                                                           |
 
 
-> **בעלות קבצים — חשוב:** `server/services/voice.service.js` (Whisper STT) הוא **באחריותי הבלעדית** — Shira אינה נוגעת בו. Shira עובדת רק על `ai.service.js` + controllers/routes של AI. ב-`features/cooking/` אני בעלת `**cooking.component`, `cooking-tts.service` והטיימרים**; Shira מוסיפה את `cooking-stt.service` **רק אחרי MERGE M11** שלי.
+> **בעלות קבצים — חשוב:** Shira עובדת רק על `ai.service.js` + controllers/routes של AI. ב-`features/cooking/` אני בעלת `**cooking.component`, `cooking-tts.service` והטיימרים**; Shira מוסיפה את `cooking-stt.service` **רק אחרי MERGE M11** שלי. ב-`feature/ai-import` אני בעלת **ה-wizard בלקוח בלבד** — אין `voice.service` לייבוא מתכונים.
 
 > **בת הזוג שלי — Shira** — אחראית על: Auth ליבה (bcrypt+JWT, `auth.middleware`, `auth.routes` register/login), Recipes CRUD (שרת + UI), שכבת ה-AI/LLM בשרת (`ai.service` בלבד), מסכי Auth + interceptor/guard בלקוח, מצב בישול `**cooking-stt.service` (פקודות קוליות)**, ו-i18n/RTL.
 
@@ -60,10 +60,10 @@
 | **M9**  | `feature/recipes-crud`            | Shira | יום 3, ~12:00 | M6 (Recipes API)                       | —                                      |
 | **M12** | `feature/categories-crud`         | Yael  | יום 3, ~12:00 | M5 (Categories API)                    | —                                      |
 | **M10** | `feature/ai-import`               | Shira | יום 3, ~18:00 | M1 (upload.middleware)                 | Yael (M15)                             |
-| **M13** | `feature/ai-import`               | Yael  | יום 3, ~18:00 | M1 (upload.middleware)                 | Yael (M15, צריכת תמלול)                |
+| ~~**M13**~~ | ~~`feature/ai-import`~~       | ~~Yael~~ | ~~יום 3~~ | **מבוטל** — אין הקלטה קולית ל-AI Import | —                                  |
 | **M11** | `feature/step-timers` (+ cooking) | Yael  | יום 4, ~12:00 | אין — עצמאי                            | Shira (M14)                            |
 | **M14** | `feature/cooking-voice-commands`  | Shira | יום 4, ~15:00 | ⏸️ **M11** (cooking.component + TTS)   | —                                      |
-| **M15** | `feature/ai-import`               | Yael  | יום 4, ~15:00 | M10 (AI server) + M13 (voice)          | —                                      |
+| **M15** | `feature/ai-import`               | Yael  | יום 4, ~15:00 | M10 (AI server)                        | —                                      |
 | **M16** | `feature/i18n-rtl`                | Shira | יום 4, ~16:30 | אין — עצמאי                            | —                                      |
 | **M17** | `feature/ci-cd`                   | Shira | יום 4, ~18:00 | כל פיצ'רי הלקוח מוזגו                  | —                                      |
 | **M18** | `feature/ci-cd`                   | Yael  | יום 4, ~18:00 | כל פיצ'רי השרת מוזגו                   | —                                      |
@@ -76,7 +76,7 @@
 
 כל שאר התלויות הן בין-יומיות (ה-MERGE כבר מוזג ביום קודם) ולכן **אינן חוסמות** ומסומנות "כבר זמין".
 
-> **בעלות הענף המשותף `feature/ai-import`:** שלושה מיזוגים יושבים על אותו ענף בבעלות שתינו — M10 (Shira), M13 (Yael), M15 (Yael). חלוקת קבצים מפורשת כדי שלא תהיה עריכה מקבילה לאותו קובץ: **Shira בעלת `ai.service.js` / `ai.controller.js` / `ai.routes.js`**; **Yael בעלת `voice.service.js` / `voice.controller.js` / `voice.routes.js` + ה-wizard בלקוח**. החיבור ביניהם דרך חוזה קלט/פלט מוסכם מראש (ראו יום 3).
+> **בעלות הענף המשותף `feature/ai-import`:** שני מיזוגים — M10 (Shira) ו-M15 (Yael). חלוקת קבצים: **Shira בעלת `ai.service.js` / `ai.controller.js` / `ai.routes.js`**; **Yael בעלת ה-wizard בלקוח בלבד** (`features/ai-import/`). אין `voice.*` בענף זה.
 
 ---
 
@@ -99,9 +99,9 @@
 - **⏸️ ממתינה ל:** אין — עצמאי (לסיים מוקדם ככל האפשר!).
 - **MERGE שלי:** M1, ~11:00
 - **⚠️ קריטי — לסיים מוקדם:** Shira ממתינה ל-M1 לפני M2, ויש לה רק ~4 שעות (M1 ~11:00 → M2 ~15:00) לכל ליבת ה-Auth בשרת. כל עיכוב ב-M1 דוחף את כל לוח היום של שתינו — זו המשימה בעדיפות עליונה בבוקר.
-- תוכן: `npm install` לכל התלות החסרות (server: `jsonwebtoken`, `bcrypt`, `multer`, `passport`/Google OAuth, Voice/LLM; client: `@ngx-translate/core`, `@ngx-translate/http-loader`) · 
-`server/.env.example` (`MONGO_URI`, `JWT_SECRET`, מפתחות Google ו-LLM) · 
-`server/routes/index.js` (aggregator) · `error.middleware.js` · `upload.middleware.js` (multer ל-PDF/תמונה/אודיו) ·
+- תוכן: `npm install` לכל התלות החסרות (server: `jsonwebtoken`, `bcrypt`, `multer`, `passport`/Google OAuth, LLM; client: `@ngx-translate/core`, `@ngx-translate/http-loader`) ·
+`server/.env.example` (`MONGO_URI`, `JWT_SECRET`, מפתחות Google ו-LLM) ·
+`server/routes/index.js` (aggregator) · `error.middleware.js` · `upload.middleware.js` (multer ל-PDF/תמונה/Word `.docx`) ·
  חיבור ב-`app.js` (עריכה מבודדת) ·
  תשתית לקוח: `app.config.ts` (`provideHttpClient` + `provideTranslate`), שלד `assets/i18n/he.json`+`en.json` ריקים, מבנה `core/` ו-`features/`.
 
@@ -136,7 +136,9 @@
 
 ---
 
-## יום 3 — Categories UI בלקוח + `voice.service` בשרת
+## יום 3 — Categories UI בלקוח
+
+> **שינוי scope:** משימה B (`voice.service` / Whisper ל-AI Import) **מבוטלת** — אין הקלטה קולית לייבוא מתכונים. יום 3 מוקדש ב-Categories UI בלבד; אפשר להשתמש בזמן הפנוי להתחיל מוקדם את שלד ה-wizard (ללא חיבור ל-AI עדיין).
 
 ### משימה A — Categories UI (לקוח, עץ היררכי)
 
@@ -145,15 +147,14 @@
 - **MERGE שלי:** M12, ~12:00
 - תוכן: `features/categories/` — תצוגת עץ היררכי, יצירה/עריכה/מחיקה, בחירת `parentCategory` · `features/categories/categories.routes.ts` + lazy ב-`app.routes.ts`.
 
-### משימה B — `voice.service` בשרת (Whisper) — בלעדי לי
+### משימה B (אופציונלי) — שלד AI Import wizard
 
 - **ענף Git:** `feature/ai-import`
-- **⏸️ ממתינה ל:** M1 (`upload.middleware`, מוזג יום 1) — כבר זמין.
-- **MERGE שלי:** M13, ~18:00
-- תוכן: `server/services/voice.service.js` (תמלול אודיו עם Whisper `whisper-1`, תמיכה בעברית) · `voice.controller.js` + `routes/voice.routes.js`. **בעלות בלעדית** — Shira אינה נוגעת.
-- **חוזה עם Shira (לא חוסם):** `voice.service` מחזיר טקסט שמוזן ל-`ai.service` של Shira (M10). לסכם פורמט קלט/פלט כך שה-wizard שלי (M15) יחבר את שני ה-endpoints ביום 4. הענף `feature/ai-import` משותף — לשמור על חלוקת קבצים (`voice.`* + wizard שלי, `ai.*` של Shira).
+- **⏸️ ממתינה ל:** אין — עצמאי (רק UI, בלי קריאות API).
+- **MERGE:** אין — נכלל ב-M15 (יום 4).
+- תוכן: `features/ai-import/` — שלד wizard עם בחירת סוג קובץ (PDF / תמונה / Word) ו-upload UI; **ללא** חיבור ל-`ai.service` עדיין (ממתין ל-M10 של Shira).
 
-**Deliverable:** ניהול קטגוריות היררכי בלקוח + תמלול אודיו בשרת מוכן עבור צינור ה-AI.
+**Deliverable:** ניהול קטגוריות היררכי בלקוח; אופציונלי — שלד wizard ל-AI Import.
 
 ---
 
@@ -169,9 +170,9 @@
 ### משימה B — AI Import wizard (לקוח)
 
 - **ענף Git:** `feature/ai-import`
-- **⏸️ ממתינה ל:** M10 (Shira — AI server, מוזג יום 3) — כבר זמין; משתמש גם ב-M13 (voice, מוזג יום 3).
+- **⏸️ ממתינה ל:** M10 (Shira — AI server, מוזג יום 3) — כבר זמין.
 - **MERGE שלי:** M15, ~15:00
-- תוכן: `features/ai-import/` — wizard עם שלב העלאה: PDF / תמונה / **הקלטה קולית חיה** → שליחה ל-endpoints (voice לתמלול + ai לחילוץ) → תצוגה מקדימה לעריכה → שמירה דרך `recipe.service` · `features/ai-import/ai-import.routes.ts` + lazy ב-`app.routes.ts`.
+- תוכן: `features/ai-import/` — wizard עם שלב העלאה: **PDF / תמונה / Word (`.docx`)** → שליחה ל-`POST /api/ai/extract` (endpoint אחד של Shira) → תצוגה מקדימה לעריכה → שמירה דרך `recipe.service` · `features/ai-import/ai-import.routes.ts` + lazy ב-`app.routes.ts`.
 
 ### משימה C — CI (job server) + deploy
 
@@ -182,7 +183,7 @@
 
 > **הערה:** Shira הקימה את תשתית ה-CI המינימלית לפני יום 1 (`server-build`: `npm ci`; `client-build`: `npm ci` + `ng build`). ב-M18 רק מרחיבים את job השרת עם טסטים ו-ESLint.
 
-**Deliverable:** הקראת שלבים + טיימרים פעילים במצב בישול + wizard ל-AI Import עובד + CI server ירוק.
+**Deliverable:** הקראת שלבים + טיימרים פעילים במצב בישול + wizard ל-AI Import (קבצים בלבד) עובד + CI server ירוק.
 
 ---
 
@@ -190,6 +191,5 @@
 
 1. **M1 (תשתית, יום 1) קריטית** — `routes/index`, `.env.example`, התקנת תלות, `upload.middleware` — Shira תלויה בכל אלה (M2 deps, M10 upload), ויש לה לו"ז הדוק (4 שעות עד M2). לסיים מוקדם ככל האפשר.
 2. **M2 (`auth.middleware` של Shira, יום 1)** — אני צורכת אותו ב-Categories (M5) וממתינה לו ל-OAuth ב-`auth.routes` (M4, באותו יום).
-3. **חוזה Voice→AI (יום 3)** — `voice.service` שלי (M13) מזין את `ai.service` של Shira (M10); `voice.service` בבעלותי הבלעדית. הענף `feature/ai-import` משותף — לשמור על חלוקת קבצים (`voice.`* + wizard שלי, `ai.*` של Shira).
+3. **M10 (`ai.service` של Shira, יום 3)** — ה-wizard שלי (M15) תלוי בו בלבד; אין `voice.service` ל-AI Import.
 4. **M11 (`cooking.component` שלי, יום 4)** — Shira ממתינה לו ל-`cooking-stt.service` (M14, באותו יום); להגדיר מראש את דגל "TTS מדבר" כדי למנוע echo.
-
