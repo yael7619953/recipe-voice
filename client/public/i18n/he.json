@@ -9,6 +9,15 @@
     "delete": "מחיקה",
     "subCount": "{{count}} תת-קטגוריות",
     "noSub": "ללא תת-קטגוריות",
+    "recipes": {
+      "title": "מתכונים ב\"{{name}}\"",
+      "hint": "לחצי על קטגוריה אחרת כדי לסנן מחדש",
+      "clearFilter": "נקי סינון",
+      "empty": "אין מתכונים בקטגוריה זו",
+      "errors": {
+        "load": "טעינת המתכונים נכשלה"
+      }
+    },
     "confirmDelete": "למחוק את הקטגוריה \"{{name}}\"?",
     "form": {
       "createTitle": "קטגוריה חדשה",
@@ -61,6 +70,7 @@
   },
   "RECIPES": {
     "TITLE": "המתכונים שלי",
+    "CATEGORIES": "קטגוריות",
     "NEW": "מתכון חדש",
     "EMPTY": "עדיין אין מתכונים. הוסיפי את המתכון הראשון שלך!",
     "LOADING": "טוען...",
@@ -101,8 +111,14 @@
         "SERVINGS": "מנות",
         "NOTES": "הערות",
         "IMAGE": "תמונה",
-        "IMAGE_BTN": "בחר תמונה"
+        "IMAGE_BTN": "בחר תמונה",
+        "CATEGORIES": "קטגוריות"
       },
+      "CATEGORIES_BTN": "שיוך לקטגוריות",
+      "CATEGORIES_DIALOG": "בחירת קטגוריות",
+      "CATEGORIES_DONE": "סיום",
+      "CATEGORIES_EMPTY": "לא נבחרו קטגוריות",
+      "CATEGORIES_NONE": "אין קטגוריות. צרי קטגוריות בעמוד הקטגוריות.",
       "ADD_INGREDIENT": "הוסף מצרך",
       "ADD_STEP": "הוסף שלב",
       "SAVE": "שמור",
@@ -119,7 +135,20 @@
     "RESUME": "המשך",
     "STOP": "עצור",
     "PREVIOUS": "הקודם",
-    "NEXT": "הבא"
+    "NEXT": "הבא",
+    "TIMER_START": "הפעל טיימר",
+    "TIMER_STOP": "עצור טיימר",
+    "TIMER_DONE": "הזמן נגמר! לחצי לסגירה.",
+    "INGREDIENTS_PHASE": "מצרכים",
+    "INGREDIENT_OF": "מצרך {{current}} מתוך {{total}}",
+    "SKIP_TO_STEPS": "דלג להוראות",
+    "VIEW_FULL_RECIPE": "צפייה במתכון המלא",
+    "FULL_RECIPE": "המתכון המלא",
+    "CLOSE": "סגירה",
+    "AUTO_MODE_ON": "אוטומטי ✓",
+    "AUTO_MODE_OFF": "ידני",
+    "AUTO_ADVANCE_IN": "שלב הבא בעוד {{seconds}} ש׳",
+    "AUTO_ADVANCE_CANCEL": "הישאר כאן"
   },
   "VALIDATION": {
     "REQUIRED": "שדה חובה",

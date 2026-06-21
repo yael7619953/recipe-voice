@@ -1,7 +1,7 @@
 <ul class="tree" [class.tree--root]="depth === 0">
   @for (node of nodes; track node._id) {
     <li class="tree__item">
-      <div class="card" [style.--cat-color]="node.color">
+      <div class="card" [class.card--selected]="selectedId === node._id" [style.--cat-color]="node.color">
         <button
           type="button"
           class="card__toggle"
@@ -12,18 +12,26 @@
           <span class="card__chevron" [class.card__chevron--open]="isExpanded(node._id)">›</span>
         </button>
 
-        <span class="card__icon" aria-hidden="true">{{ node.icon }}</span>
+        <button
+          type="button"
+          class="card__select"
+          [class.card__select--active]="selectedId === node._id"
+          [attr.aria-pressed]="selectedId === node._id"
+          (click)="select.emit(node)"
+        >
+          <span class="card__icon" aria-hidden="true">{{ node.icon }}</span>
 
-        <div class="card__body">
-          <span class="card__name">{{ node.name }}</span>
-          <span class="card__meta">
-            @if (node.children.length > 0) {
-              {{ 'categories.subCount' | translate: { count: node.children.length } }}
-            } @else {
-              {{ 'categories.noSub' | translate }}
-            }
+          <span class="card__body">
+            <span class="card__name">{{ node.name }}</span>
+            <span class="card__meta">
+              @if (node.children.length > 0) {
+                {{ 'categories.subCount' | translate: { count: node.children.length } }}
+              } @else {
+                {{ 'categories.noSub' | translate }}
+              }
+            </span>
           </span>
-        </div>
+        </button>
 
         <div class="card__actions">
           <button
@@ -57,9 +65,11 @@
         <app-category-tree
           [nodes]="node.children"
           [depth]="depth + 1"
+          [selectedId]="selectedId"
           (edit)="edit.emit($event)"
           (remove)="remove.emit($event)"
           (addChild)="addChild.emit($event)"
+          (select)="select.emit($event)"
         />
       }
     </li>

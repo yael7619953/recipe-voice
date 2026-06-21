@@ -22,6 +22,10 @@ export class CookingTtsService {
     typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
 
   private current: SpeechSynthesisUtterance | null = null;
+  private queue: string[] = [];
+  private pendingComplete: (() => void) | null = null;
+  private pendingItemStart: ((index: number) => void) | null = null;
+  private queueIndex = 0;
 
   private readonly _speaking = signal(false);
   private readonly _paused = signal(false);
@@ -41,29 +45,40 @@ export class CookingTtsService {
   readonly supported = this.synth !== null;
 
   /** Read the given text aloud, cancelling any in-progress utterance first. */
-  speak(text: string): void {
+  speak(text: string, onEnd?: () => void): void {
     if (!this.synth || !text?.trim()) {
+      onEnd?.();
       return;
     }
 
+    this.clearQueue();
     this.synth.cancel();
+    this.speakUtterance(text.trim(), onEnd);
+  }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = this.resolveLang();
-    const voice = this.pickVoice(utterance.lang);
-    if (voice) {
-      utterance.voice = voice;
+  /** Read texts one after another; optional hooks for UI sync. */
+  speakSequence(
+    texts: string[],
+    options?: { onComplete?: () => void; onItemStart?: (index: number) => void },
+  ): void {
+    if (!this.synth) {
+      return;
     }
 
-    utterance.onstart = () => {
-      this._speaking.set(true);
-      this._paused.set(false);
-    };
-    utterance.onend = () => this.reset();
-    utterance.onerror = () => this.reset();
+    const items = texts.map((t) => t.trim()).filter(Boolean);
+    if (!items.length) {
+      options?.onComplete?.();
+      return;
+    }
 
-    this.current = utterance;
-    this.synth.speak(utterance);
+    this.clearQueue();
+    this.synth.cancel();
+    this.queue = items.slice(1);
+    this.pendingComplete = options?.onComplete ?? null;
+    this.pendingItemStart = options?.onItemStart ?? null;
+    this.queueIndex = 0;
+    this.pendingItemStart?.(0);
+    this.speakUtterance(items[0], () => this.advanceQueue());
   }
 
   /** Stop playback entirely and clear state. */
@@ -72,6 +87,7 @@ export class CookingTtsService {
       return;
     }
     this.synth.cancel();
+    this.clearQueue();
     this.reset();
   }
 
@@ -91,6 +107,56 @@ export class CookingTtsService {
     }
     this.synth.resume();
     this._paused.set(false);
+  }
+
+  private speakUtterance(text: string, onEnd?: () => void): void {
+    if (!this.synth) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = this.resolveLang();
+    const voice = this.pickVoice(utterance.lang);
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onstart = () => {
+      this._speaking.set(true);
+      this._paused.set(false);
+    };
+    utterance.onend = () => {
+      this.reset();
+      onEnd?.();
+    };
+    utterance.onerror = () => {
+      this.reset();
+      onEnd?.();
+    };
+
+    this.current = utterance;
+    this.synth.speak(utterance);
+  }
+
+  private advanceQueue(): void {
+    const next = this.queue.shift();
+    if (!next) {
+      const complete = this.pendingComplete;
+      this.clearQueue();
+      complete?.();
+      return;
+    }
+
+    this.queueIndex += 1;
+    this.pendingItemStart?.(this.queueIndex);
+    this.speakUtterance(next, () => this.advanceQueue());
+  }
+
+  private clearQueue(): void {
+    this.queue = [];
+    this.pendingComplete = null;
+    this.pendingItemStart = null;
+    this.queueIndex = 0;
   }
 
   private reset(): void {

@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { RecipeService } from '../../../core/services/recipe.service';
+import { CategoryService } from '../../../core/services/category.service';
 import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
@@ -13,6 +14,7 @@ import { Recipe } from '../../../core/models/recipe.model';
 })
 export class RecipesHomeComponent implements OnInit {
   private recipeService = inject(RecipeService);
+  private categoryService = inject(CategoryService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
@@ -23,6 +25,7 @@ export class RecipesHomeComponent implements OnInit {
   totalPages = signal(1);
 
   ngOnInit(): void {
+    this.categoryService.load().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
     this.loadPage(1);
   }
 
@@ -49,6 +52,10 @@ export class RecipesHomeComponent implements OnInit {
 
   navigateTo(id: string): void {
     void this.router.navigate(['/recipes', id]);
+  }
+
+  categoryBadges(recipe: Recipe): Array<{ id: string; icon: string; color: string }> {
+    return this.categoryService.badgesFor(recipe.categories);
   }
 
   delete(id: string, event: Event): void {

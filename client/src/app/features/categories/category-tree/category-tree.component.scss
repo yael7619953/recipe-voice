@@ -35,9 +35,33 @@
     transform 0.15s ease;
 }
 
-.card:hover {
+.card:hover,
+.card--selected {
   border-color: var(--cat-color, #f15a29);
   box-shadow: 0 4px 14px rgba(20, 20, 30, 0.08);
+}
+
+.card--selected {
+  background: color-mix(in srgb, var(--cat-color, #f15a29) 6%, #fff);
+}
+
+.card__select {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  color: inherit;
+}
+
+.card__select--active .card__name {
+  color: var(--cat-color, #f15a29);
 }
 
 .card__toggle {
@@ -88,7 +112,6 @@
   gap: 0.15rem;
   min-width: 0;
   flex: 1 1 auto;
-  text-align: start;
 }
 
 .card__name {

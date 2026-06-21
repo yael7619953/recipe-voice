@@ -31,6 +31,26 @@
         <textarea id="description" formControlName="description" rows="2"></textarea>
       </div>
 
+      <!-- Categories -->
+      <div class="field">
+        <label>{{ 'RECIPES.FORM.FIELD.CATEGORIES' | translate }}</label>
+        <button type="button" class="btn-categories" (click)="openCategoriesDialog()">
+          {{ 'RECIPES.FORM.CATEGORIES_BTN' | translate }}
+        </button>
+        @if (selectedCategories().length > 0) {
+          <ul class="category-tags">
+            @for (category of selectedCategories(); track category._id) {
+              <li class="category-tag" [style.--cat-color]="category.color">
+                <span class="category-tag__icon" aria-hidden="true">{{ category.icon }}</span>
+                <span>{{ category.name }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="category-empty">{{ 'RECIPES.FORM.CATEGORIES_EMPTY' | translate }}</p>
+        }
+      </div>
+
       <!-- Prep time -->
       <div class="field-row">
         <div class="field field--small" formGroupName="prepTime">
@@ -127,5 +147,48 @@
       </div>
 
     </form>
+
+    @if (categoriesDialogOpen()) {
+      <div class="dialog-backdrop" (click)="closeCategoriesDialog()">
+        <div
+          class="dialog"
+          role="dialog"
+          aria-modal="true"
+          [attr.aria-label]="'RECIPES.FORM.CATEGORIES_DIALOG' | translate"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="dialog__header">
+            <h2 class="dialog__title">{{ 'RECIPES.FORM.CATEGORIES_DIALOG' | translate }}</h2>
+            <button type="button" class="dialog__close" (click)="closeCategoriesDialog()" aria-label="×">×</button>
+          </header>
+
+          @if (categoryOptions().length === 0) {
+            <p class="dialog__empty">{{ 'RECIPES.FORM.CATEGORIES_NONE' | translate }}</p>
+          } @else {
+            <ul class="category-picker">
+              @for (option of categoryOptions(); track option.id) {
+                <li class="category-picker__item" [style.--indent]="option.depth">
+                  <label class="category-picker__label">
+                    <input
+                      type="checkbox"
+                      [checked]="isCategorySelected(option.id)"
+                      (change)="toggleCategory(option.id)"
+                    />
+                    <span class="category-picker__icon" aria-hidden="true">{{ option.icon }}</span>
+                    <span class="category-picker__name">{{ option.name }}</span>
+                  </label>
+                </li>
+              }
+            </ul>
+          }
+
+          <footer class="dialog__footer">
+            <button type="button" class="btn-primary" (click)="closeCategoriesDialog()">
+              {{ 'RECIPES.FORM.CATEGORIES_DONE' | translate }}
+            </button>
+          </footer>
+        </div>
+      </div>
+    }
   }
 </div>

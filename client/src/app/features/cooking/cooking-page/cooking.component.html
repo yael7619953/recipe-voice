@@ -1,71 +1,399 @@
 <div class="cooking-page">
+
   @if (loading()) {
+
     <p class="status-msg">{{ 'RECIPES.LOADING' | translate }}</p>
+
   } @else if (errorKey() || !recipe()) {
+
     <p class="status-msg error" role="alert">
+
       {{ (errorKey() ?? 'RECIPES.ERROR.NOT_FOUND') | translate }}
+
     </p>
+
     <a class="btn-back" routerLink="/recipes">← {{ 'RECIPES.BACK' | translate }}</a>
+
   } @else if (totalSteps() === 0) {
+
     <p class="status-msg">{{ 'COOKING.NO_STEPS' | translate }}</p>
+
     <a class="btn-back" [routerLink]="['/recipes', recipe()!._id]">← {{ 'RECIPES.BACK' | translate }}</a>
+
   } @else {
+
     <header class="cooking-header">
-      <a class="btn-back" [routerLink]="['/recipes', recipe()!._id]">← {{ 'COOKING.EXIT' | translate }}</a>
+
+      <div class="cooking-header__top">
+
+        <a class="btn-back" [routerLink]="['/recipes', recipe()!._id]">← {{ 'COOKING.EXIT' | translate }}</a>
+
+        <button type="button" class="btn-view-recipe" (click)="toggleFullRecipe()">
+
+          📖 {{ 'COOKING.VIEW_FULL_RECIPE' | translate }}
+
+        </button>
+
+      </div>
+
       <h1 class="cooking-title">{{ recipe()!.title }}</h1>
-      <span class="cooking-progress">
-        {{ 'COOKING.STEP_OF' | translate: { current: currentStepIndex() + 1, total: totalSteps() } }}
-      </span>
+
+      @if (isIngredientsPhase()) {
+
+        <span class="cooking-progress">
+
+          {{ 'COOKING.INGREDIENTS_PHASE' | translate }}
+
+          @if (totalIngredients() > 0) {
+
+            —
+
+            {{
+
+              'COOKING.INGREDIENT_OF'
+
+                | translate: { current: currentIngredientIndex() + 1, total: totalIngredients() }
+
+            }}
+
+          }
+
+        </span>
+
+      } @else {
+
+        <span class="cooking-progress">
+
+          {{ 'COOKING.STEP_OF' | translate: { current: currentStepIndex() + 1, total: totalSteps() } }}
+
+        </span>
+
+      }
+
     </header>
 
-    <div
-      class="progress-bar"
-      role="progressbar"
-      [attr.aria-valuenow]="currentStepIndex() + 1"
-      [attr.aria-valuemin]="1"
-      [attr.aria-valuemax]="totalSteps()"
-    >
-      <div class="progress-bar__fill" [style.inline-size.%]="((currentStepIndex() + 1) / totalSteps()) * 100"></div>
-    </div>
 
-    <article class="step-card" [class.step-card--speaking]="isTtsSpeaking()">
-      <span class="step-number">{{ 'RECIPES.STEP' | translate }} {{ currentStepIndex() + 1 }}</span>
-      <p class="step-text">{{ currentStep().text }}</p>
 
-      @if (currentStep().timer.hasTimer) {
-        <button
-          type="button"
-          class="timer-badge"
-          [class.timer-badge--running]="isTimerRunning()"
-          (click)="toggleTimer()"
-        >
-          ⏲ {{ timerDisplay() }}
-          <span class="timer-badge__icon">{{ isTimerRunning() ? '⏹' : '▶' }}</span>
-        </button>
-      }
-    </article>
+    @if (isInstructionsPhase()) {
 
-    @if (ttsSupported) {
-      <div class="tts-controls" role="group" [attr.aria-label]="'COOKING.TTS' | translate">
-        <button type="button" class="tts-btn" (click)="speakCurrentStep()">
-          🔊 {{ 'COOKING.READ_ALOUD' | translate }}
-        </button>
-        @if (isTtsSpeaking()) {
-          <button type="button" class="tts-btn" (click)="pauseSpeech()">⏸ {{ 'COOKING.PAUSE' | translate }}</button>
-        } @else if (ttsPaused()) {
-          <button type="button" class="tts-btn" (click)="resumeSpeech()">▶ {{ 'COOKING.RESUME' | translate }}</button>
-        }
-        <button type="button" class="tts-btn" (click)="stopSpeech()">⏹ {{ 'COOKING.STOP' | translate }}</button>
+      <div
+
+        class="progress-bar"
+
+        role="progressbar"
+
+        [attr.aria-valuenow]="currentStepIndex() + 1"
+
+        [attr.aria-valuemin]="1"
+
+        [attr.aria-valuemax]="totalSteps()"
+
+      >
+
+        <div
+
+          class="progress-bar__fill"
+
+          [style.inline-size.%]="((currentStepIndex() + 1) / totalSteps()) * 100"
+
+        ></div>
+
       </div>
+
     }
 
-    <nav class="step-nav">
-      <button type="button" class="nav-btn" [disabled]="isFirstStep()" (click)="previous()">
-        ← {{ 'COOKING.PREVIOUS' | translate }}
-      </button>
-      <button type="button" class="nav-btn nav-btn--primary" [disabled]="isLastStep()" (click)="next()">
-        {{ 'COOKING.NEXT' | translate }} →
-      </button>
-    </nav>
+
+
+    @if (isIngredientsPhase()) {
+
+      <article class="step-card ingredients-card" [class.step-card--speaking]="isTtsSpeaking()">
+
+        <span class="step-number">{{ 'RECIPES.INGREDIENTS' | translate }}</span>
+
+        <ul class="ingredient-list">
+
+          @for (item of ingredients(); track $index) {
+
+            <li [class.ingredient-list__item--active]="$index === currentIngredientIndex() && isTtsSpeaking()">
+
+              {{ item }}
+
+            </li>
+
+          }
+
+        </ul>
+
+        <button type="button" class="nav-btn nav-btn--primary skip-btn" (click)="skipToInstructions()">
+
+          {{ 'COOKING.SKIP_TO_STEPS' | translate }} →
+
+        </button>
+
+      </article>
+
+    } @else {
+
+      <article class="step-card" [class.step-card--speaking]="isTtsSpeaking()">
+
+        <span class="step-number">{{ 'RECIPES.STEP' | translate }} {{ currentStepIndex() + 1 }}</span>
+
+        <p class="step-text">{{ currentStep()!.text }}</p>
+
+
+
+        @if (currentStep()!.timer.hasTimer) {
+
+          <button
+
+            type="button"
+
+            class="timer-badge"
+
+            [class.timer-badge--running]="isTimerRunning()"
+
+            [class.timer-badge--finished]="timerFinished()"
+
+            [attr.aria-label]="
+
+              timerFinished()
+
+                ? ('COOKING.TIMER_DONE' | translate)
+
+                : (isTimerRunning() ? ('COOKING.TIMER_STOP' | translate) : ('COOKING.TIMER_START' | translate))
+
+            "
+
+            (click)="toggleTimer()"
+
+          >
+
+            ⏲ {{ timerDisplay() }}
+
+            <span class="timer-badge__icon">{{ isTimerRunning() ? '⏹' : timerFinished() ? '✓' : '▶' }}</span>
+
+          </button>
+
+          @if (timerFinished()) {
+
+            <p class="timer-done-msg" role="status" aria-live="assertive">
+
+              🔔 {{ 'COOKING.TIMER_DONE' | translate }}
+
+            </p>
+
+          }
+
+        }
+
+      </article>
+
+    }
+
+
+
+    @if (ttsSupported) {
+
+      <div class="tts-controls" role="group" [attr.aria-label]="'COOKING.TTS' | translate">
+
+        <button type="button" class="tts-btn" (click)="speakCurrentContent()">
+
+          🔊 {{ 'COOKING.READ_ALOUD' | translate }}
+
+        </button>
+
+        @if (isTtsSpeaking()) {
+
+          <button type="button" class="tts-btn" (click)="pauseSpeech()">⏸ {{ 'COOKING.PAUSE' | translate }}</button>
+
+        } @else if (ttsPaused()) {
+
+          <button type="button" class="tts-btn" (click)="resumeSpeech()">▶ {{ 'COOKING.RESUME' | translate }}</button>
+
+        }
+
+        <button type="button" class="tts-btn" (click)="stopSpeech()">⏹ {{ 'COOKING.STOP' | translate }}</button>
+
+      </div>
+
+    }
+
+
+
+    @if (isInstructionsPhase()) {
+
+      <nav class="step-nav">
+
+        <button type="button" class="nav-btn" [disabled]="isFirstStep()" (click)="previous()">
+
+          ← {{ 'COOKING.PREVIOUS' | translate }}
+
+        </button>
+
+        <button type="button" class="nav-btn nav-btn--primary" [disabled]="isLastStep()" (click)="next()">
+
+          {{ 'COOKING.NEXT' | translate }} →
+
+        </button>
+
+      </nav>
+
+      <div class="auto-mode-bar">
+
+        <button
+          type="button"
+          class="auto-mode-btn"
+          [class.auto-mode-btn--active]="autoMode()"
+          (click)="toggleAutoMode()"
+          [attr.aria-pressed]="autoMode()"
+          [attr.aria-label]="(autoMode() ? 'COOKING.AUTO_MODE_ON' : 'COOKING.AUTO_MODE_OFF') | translate"
+        >
+          {{ (autoMode() ? 'COOKING.AUTO_MODE_ON' : 'COOKING.AUTO_MODE_OFF') | translate }}
+        </button>
+
+        @if (autoAdvanceRemaining() !== null) {
+
+          <span class="auto-advance-countdown" role="status" aria-live="polite">
+            {{ 'COOKING.AUTO_ADVANCE_IN' | translate: { seconds: autoAdvanceRemaining() } }}
+          </span>
+
+          <button type="button" class="auto-advance-cancel" (click)="cancelAutoAdvance()">
+            {{ 'COOKING.AUTO_ADVANCE_CANCEL' | translate }}
+          </button>
+
+        }
+
+      </div>
+
+    }
+
+
+
+    @if (showFullRecipe()) {
+
+      <div class="recipe-overlay" role="dialog" aria-modal="true" [attr.aria-label]="'COOKING.FULL_RECIPE' | translate">
+
+        <div class="recipe-overlay__backdrop" (click)="closeFullRecipe()"></div>
+
+        <div class="recipe-overlay__panel">
+
+          <header class="recipe-overlay__header">
+
+            <h2>{{ 'COOKING.FULL_RECIPE' | translate }}</h2>
+
+            <button type="button" class="recipe-overlay__close" (click)="closeFullRecipe()">
+
+              ✕ {{ 'COOKING.CLOSE' | translate }}
+
+            </button>
+
+          </header>
+
+
+
+          <div class="recipe-overlay__body">
+
+            <h3 class="recipe-overlay__title">{{ recipe()!.title }}</h3>
+
+
+
+            @if (recipe()!.description) {
+
+              <p class="recipe-overlay__desc">{{ recipe()!.description }}</p>
+
+            }
+
+
+
+            <div class="recipe-overlay__meta">
+
+              @if (recipe()!.prepTime.hours > 0 || recipe()!.prepTime.minutes > 0) {
+
+                <span class="meta-chip">
+
+                  ⏱ {{ formatPrepTime(recipe()!.prepTime.hours, recipe()!.prepTime.minutes) }}
+
+                </span>
+
+              }
+
+              @if (recipe()!.servings) {
+
+                <span class="meta-chip">🍽 {{ recipe()!.servings }} {{ 'RECIPES.SERVINGS' | translate }}</span>
+
+              }
+
+            </div>
+
+
+
+            <section class="recipe-overlay__section">
+
+              <h4>{{ 'RECIPES.INGREDIENTS' | translate }}</h4>
+
+              <ul class="ingredient-list ingredient-list--compact">
+
+                @for (item of ingredients(); track $index) {
+
+                  <li>{{ item }}</li>
+
+                }
+
+              </ul>
+
+            </section>
+
+
+
+            <section class="recipe-overlay__section">
+
+              <h4>{{ 'RECIPES.INSTRUCTIONS' | translate }}</h4>
+
+              <ol class="overlay-step-list">
+
+                @for (step of steps(); track $index) {
+
+                  <li [class.overlay-step-list__item--current]="isInstructionsPhase() && $index === currentStepIndex()">
+
+                    <p>{{ step.text }}</p>
+
+                    @if (step.timer.hasTimer) {
+
+                      <span class="overlay-timer">⏲ {{ formatSeconds(step.timer.duration) }}</span>
+
+                    }
+
+                  </li>
+
+                }
+
+              </ol>
+
+            </section>
+
+
+
+            @if (recipe()!.notes) {
+
+              <section class="recipe-overlay__section">
+
+                <h4>{{ 'RECIPES.NOTES' | translate }}</h4>
+
+                <p class="recipe-overlay__notes">{{ recipe()!.notes }}</p>
+
+              </section>
+
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+
+    }
+
   }
+
 </div>
+
