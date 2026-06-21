@@ -3,6 +3,10 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { TokenStorageService } from '../services/token-storage.service';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
+  if (req.url.startsWith('/api/auth/')) {
+    return next(req);
+  }
+
   const token = inject(TokenStorageService).getToken();
 
   if (!token) {
