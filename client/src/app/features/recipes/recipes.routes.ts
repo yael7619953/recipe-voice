@@ -6,4 +6,19 @@ export const recipesRoutes: Routes = [
     loadComponent: () =>
       import('./recipes-home/recipes-home.component').then((m) => m.RecipesHomeComponent),
   },
+  {
+    path: 'new',
+    loadComponent: () =>
+      import('./recipe-form/recipe-form.component').then((m) => m.RecipeFormComponent),
+  },
+  {
+    path: ':id/edit',
+    loadComponent: () =>
+      import('./recipe-form/recipe-form.component').then((m) => m.RecipeFormComponent),
+  },
+  {
+    path: ':id',
+    loadComponent: () =>
+      import('./recipe-detail/recipe-detail.component').then((m) => m.RecipeDetailComponent),
+  },
 ];
