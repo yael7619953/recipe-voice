@@ -1,1 +1,7 @@
-{}
+{
+  "auth": {
+    "oauthCallback": {
+      "processing": "מתחברים..."
+    }
+  }
+}
