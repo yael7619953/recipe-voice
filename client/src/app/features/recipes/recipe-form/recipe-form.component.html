@@ -1,6 +1,6 @@
 <div class="form-page">
   <header class="form-header">
-    <a class="btn-back" routerLink="/recipes">← {{ 'RECIPES.BACK' | translate }}</a>
+    <a class="btn-back" routerLink="/recipes">{{ 'RECIPES.BACK' | translate }}</a>
     <h1 class="form-title">
       {{ (isEdit() ? 'RECIPES.FORM.TITLE_EDIT' : 'RECIPES.FORM.TITLE_NEW') | translate }}
     </h1>
@@ -56,7 +56,7 @@
               [placeholder]="'RECIPES.FORM.FIELD.INGREDIENT_PH' | translate"
               [class.invalid]="ctrl.invalid && ctrl.touched" />
             @if (ingredientsArray.length > 1) {
-              <button type="button" class="btn-remove" (click)="removeIngredient($index)" aria-label="הסר">✕</button>
+              <button type="button" class="btn-remove" (click)="removeIngredient($index)" [attr.aria-label]="'COMMON.REMOVE' | translate">✕</button>
             }
           </div>
         }
@@ -88,7 +88,7 @@
               </div>
             </div>
             @if (instructionsArray.length > 1) {
-              <button type="button" class="btn-remove" (click)="removeStep($index)" aria-label="הסר">✕</button>
+              <button type="button" class="btn-remove" (click)="removeStep($index)" [attr.aria-label]="'COMMON.REMOVE' | translate">✕</button>
             }
           </div>
         }

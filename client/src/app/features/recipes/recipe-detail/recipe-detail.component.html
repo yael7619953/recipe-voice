@@ -6,7 +6,7 @@
     <a class="btn-back" routerLink="/recipes">{{ 'RECIPES.BACK' | translate }}</a>
   } @else {
     <header class="detail-header">
-      <a class="btn-back" routerLink="/recipes">← {{ 'RECIPES.BACK' | translate }}</a>
+      <a class="btn-back" routerLink="/recipes">{{ 'RECIPES.BACK' | translate }}</a>
       <div class="detail-actions">
         <a class="btn-secondary" [routerLink]="['/recipes', recipe()!._id, 'edit']">{{ 'RECIPES.EDIT' | translate }}</a>
         <button class="btn-danger" (click)="delete()">{{ 'RECIPES.DELETE' | translate }}</button>
