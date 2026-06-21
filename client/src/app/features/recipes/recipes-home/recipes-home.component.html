@@ -11,18 +11,18 @@
   } @else if (recipes().length === 0) {
     <p class="status-msg">{{ 'RECIPES.EMPTY' | translate }}</p>
   } @else {
-    <ul class="recipe-list">
+    <ul class="recipe-grid">
       @for (recipe of recipes(); track recipe._id) {
         <li class="recipe-card" (click)="navigateTo(recipe._id)" (keydown.enter)="navigateTo(recipe._id)" tabindex="0" role="button">
-          <div class="recipe-card__body">
-            <h2 class="recipe-card__title">{{ recipe.title }}</h2>
-            @if (recipe.description) {
-              <p class="recipe-card__desc">{{ recipe.description }}</p>
+          <div class="recipe-card__image">
+            @if (recipe.imageUrl) {
+              <img [src]="recipe.imageUrl" [alt]="recipe.title" />
+            } @else {
+              <div class="recipe-card__no-image">🍽️</div>
             }
           </div>
-          <div class="recipe-card__actions">
-            <a class="btn-icon" [routerLink]="['/recipes', recipe._id, 'edit']" (click)="$event.stopPropagation()" aria-label="{{ 'RECIPES.EDIT' | translate }}">✏️</a>
-            <button class="btn-icon btn-icon--danger" (click)="delete(recipe._id, $event)" aria-label="{{ 'RECIPES.DELETE' | translate }}">🗑️</button>
+          <div class="recipe-card__footer">
+            <h2 class="recipe-card__title">{{ recipe.title }}</h2>
           </div>
         </li>
       }

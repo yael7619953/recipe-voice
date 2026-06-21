@@ -61,11 +61,13 @@
         "INSTRUCTIONS": "שלבי הכנה",
         "INSTRUCTION_PH": "תאר את השלב...",
         "HAS_TIMER": "הוסף טיימר לשלב זה",
-        "TIMER_DURATION": "משך (שניות)",
+        "TIMER_DURATION": "משך (דקות)",
         "PREP_HOURS": "שעות",
         "PREP_MINUTES": "דקות",
         "SERVINGS": "מנות",
-        "NOTES": "הערות"
+        "NOTES": "הערות",
+        "IMAGE": "תמונה",
+        "IMAGE_BTN": "בחר תמונה"
       },
       "ADD_INGREDIENT": "הוסף מצרך",
       "ADD_STEP": "הוסף שלב",

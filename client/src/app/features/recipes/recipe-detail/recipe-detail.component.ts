@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -11,7 +11,7 @@ import { Recipe } from '../../../core/models/recipe.model';
   templateUrl: './recipe-detail.component.html',
   styleUrl: './recipe-detail.component.scss',
 })
-export class RecipeDetailComponent implements OnInit {
+export class RecipeDetailComponent implements OnInit, OnDestroy {
   private recipeService = inject(RecipeService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -20,6 +20,9 @@ export class RecipeDetailComponent implements OnInit {
   recipe = signal<Recipe | null>(null);
   loading = signal(true);
   errorKey = signal<string | null>(null);
+
+  timerSeconds = signal<Map<number, number>>(new Map());
+  private readonly intervals = new Map<number, ReturnType<typeof setInterval>>();
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -38,6 +41,12 @@ export class RecipeDetailComponent implements OnInit {
       });
   }
 
+  ngOnDestroy(): void {
+    for (const id of this.intervals.values()) {
+      clearInterval(id);
+    }
+  }
+
   delete(): void {
     const r = this.recipe();
     if (!r || !window.confirm('מחק מתכון זה?')) return;
@@ -51,16 +60,55 @@ export class RecipeDetailComponent implements OnInit {
       });
   }
 
+  toggleTimer(stepIndex: number, durationMinutes: number): void {
+    if (this.intervals.has(stepIndex)) {
+      clearInterval(this.intervals.get(stepIndex)!);
+      this.intervals.delete(stepIndex);
+      const updated = new Map(this.timerSeconds());
+      updated.delete(stepIndex);
+      this.timerSeconds.set(updated);
+      return;
+    }
+
+    let remaining = durationMinutes * 60;
+    const started = new Map(this.timerSeconds());
+    started.set(stepIndex, remaining);
+    this.timerSeconds.set(started);
+
+    const id = setInterval(() => {
+      remaining--;
+      const m = new Map(this.timerSeconds());
+      if (remaining <= 0) {
+        clearInterval(this.intervals.get(stepIndex)!);
+        this.intervals.delete(stepIndex);
+        m.set(stepIndex, 0);
+      } else {
+        m.set(stepIndex, remaining);
+      }
+      this.timerSeconds.set(m);
+    }, 1000);
+
+    this.intervals.set(stepIndex, id);
+  }
+
+  isTimerRunning(stepIndex: number): boolean {
+    return this.intervals.has(stepIndex);
+  }
+
+  timerDisplay(stepIndex: number, durationMinutes: number): string {
+    const secs = this.timerSeconds().get(stepIndex);
+    if (secs !== undefined) {
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+    return `${durationMinutes} דקות`;
+  }
+
   formatPrepTime(hours: number, minutes: number): string {
     const parts: string[] = [];
     if (hours > 0) parts.push(`${hours}ש׳`);
     if (minutes > 0) parts.push(`${minutes}ד׳`);
     return parts.length ? parts.join(' ') : '—';
-  }
-
-  formatTimer(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return s > 0 ? `${m}:${String(s).padStart(2, '0')} דקות` : `${m} דקות`;
   }
 }

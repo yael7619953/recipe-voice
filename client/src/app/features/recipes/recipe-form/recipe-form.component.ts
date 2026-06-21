@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { of, switchMap } from 'rxjs';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { Recipe, RecipeDraft } from '../../../core/models/recipe.model';
 
@@ -23,6 +24,8 @@ export class RecipeFormComponent implements OnInit {
   loading = signal(false);
   loadingRecipe = signal(false);
   errorKey = signal<string | null>(null);
+  selectedImage = signal<File | null>(null);
+  imagePreview = signal<string | null>(null);
   private recipeId: string | null = null;
 
   form: FormGroup = this.fb.group({
@@ -37,6 +40,7 @@ export class RecipeFormComponent implements OnInit {
     servings: [''],
     notes: [''],
     isFavorite: [false],
+    imageUrl: [''],
   });
 
   get ingredientsArray(): FormArray {
@@ -101,6 +105,7 @@ export class RecipeFormComponent implements OnInit {
       servings: r.servings ?? '',
       notes: r.notes ?? '',
       isFavorite: r.isFavorite,
+      imageUrl: r.imageUrl ?? '',
     });
   }
 
@@ -124,6 +129,19 @@ export class RecipeFormComponent implements OnInit {
     }
   }
 
+  onImageSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.selectedImage.set(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => this.imagePreview.set(e.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      this.imagePreview.set(null);
+    }
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -139,14 +157,21 @@ export class RecipeFormComponent implements OnInit {
       ? this.recipeService.update(this.recipeId!, draft)
       : this.recipeService.create(draft);
 
-    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (saved) => void this.router.navigate(['/recipes', saved._id]),
-      error: () => {
-        this.errorKey.set('RECIPES.ERROR.SAVE');
-        this.loading.set(false);
-        this.form.enable();
-      },
-    });
+    const imageFile = this.selectedImage();
+
+    request$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        switchMap((saved) => (imageFile ? this.recipeService.uploadImage(saved._id, imageFile) : of(saved))),
+      )
+      .subscribe({
+        next: (saved) => void this.router.navigate(['/recipes', saved._id]),
+        error: () => {
+          this.errorKey.set('RECIPES.ERROR.SAVE');
+          this.loading.set(false);
+          this.form.enable();
+        },
+      });
   }
 
   private newIngredientControl() {

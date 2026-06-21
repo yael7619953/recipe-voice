@@ -37,4 +37,10 @@ export class RecipeService {
   toggleFavorite(id: string, isFavorite: boolean): Observable<Recipe> {
     return this.patch(id, { isFavorite });
   }
+
+  uploadImage(id: string, file: File): Observable<Recipe> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return this.http.post<Recipe>(`${API}/${id}/image`, fd);
+  }
 }

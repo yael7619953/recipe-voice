@@ -95,6 +95,20 @@
         <button type="button" class="btn-add" (click)="addStep()">+ {{ 'RECIPES.FORM.ADD_STEP' | translate }}</button>
       </fieldset>
 
+      <!-- Image -->
+      <div class="field">
+        <label>{{ 'RECIPES.FORM.FIELD.IMAGE' | translate }}</label>
+        @if (imagePreview()) {
+          <img class="image-preview" [src]="imagePreview()!" alt="preview" />
+        } @else if (form.get('imageUrl')!.value) {
+          <img class="image-preview" [src]="form.get('imageUrl')!.value" alt="preview" />
+        }
+        <label class="file-label">
+          <input type="file" accept="image/*" class="file-input" (change)="onImageSelect($event)" />
+          <span class="file-btn">{{ 'RECIPES.FORM.FIELD.IMAGE_BTN' | translate }}</span>
+        </label>
+      </div>
+
       <!-- Notes -->
       <div class="field">
         <label for="notes">{{ 'RECIPES.FORM.FIELD.NOTES' | translate }}</label>

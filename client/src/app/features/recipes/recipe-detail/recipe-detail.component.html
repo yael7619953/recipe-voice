@@ -14,6 +14,12 @@
     </header>
 
     <article class="detail-body">
+      @if (recipe()!.imageUrl) {
+        <div class="recipe-image">
+          <img [src]="recipe()!.imageUrl" [alt]="recipe()!.title" />
+        </div>
+      }
+
       <h1 class="detail-title">{{ recipe()!.title }}</h1>
 
       @if (recipe()!.description) {
@@ -45,7 +51,15 @@
             <li class="step-item">
               <p>{{ step.text }}</p>
               @if (step.timer.hasTimer) {
-                <span class="timer-badge">⏲ {{ formatTimer(step.timer.duration) }}</span>
+                <button
+                  type="button"
+                  class="timer-badge"
+                  [class.timer-badge--running]="isTimerRunning($index)"
+                  (click)="toggleTimer($index, step.timer.duration)"
+                >
+                  ⏲ {{ timerDisplay($index, step.timer.duration) }}
+                  <span class="timer-badge__icon">{{ isTimerRunning($index) ? '⏹' : '▶' }}</span>
+                </button>
               }
             </li>
           }

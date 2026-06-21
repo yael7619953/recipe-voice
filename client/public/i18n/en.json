@@ -61,11 +61,13 @@
         "INSTRUCTIONS": "Instructions",
         "INSTRUCTION_PH": "Describe the step...",
         "HAS_TIMER": "Add timer to this step",
-        "TIMER_DURATION": "Duration (seconds)",
+        "TIMER_DURATION": "Duration (minutes)",
         "PREP_HOURS": "Hours",
         "PREP_MINUTES": "Minutes",
         "SERVINGS": "Servings",
-        "NOTES": "Notes"
+        "NOTES": "Notes",
+        "IMAGE": "Image",
+        "IMAGE_BTN": "Choose image"
       },
       "ADD_INGREDIENT": "Add ingredient",
       "ADD_STEP": "Add step",
