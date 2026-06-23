@@ -104,6 +104,29 @@
   color: #374151;
 }
 
+.btn-cooking {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-block-end: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #4f46e5;
+  }
+}
+
 .detail-section {
   margin-block-end: 1.5rem;
 

@@ -3,8 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { CategoryService } from '../../../core/services/category.service';
 import { RecipeService } from '../../../core/services/recipe.service';
+import { CategoryService } from '../../../core/services/category.service';
 import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
@@ -70,6 +70,10 @@ export class RecipesHomeComponent implements OnInit {
 
   navigateTo(id: string): void {
     void this.router.navigate(['/recipes', id]);
+  }
+
+  categoryBadges(recipe: Recipe): Array<{ id: string; icon: string; color: string }> {
+    return this.categoryService.badgesFor(recipe.categories);
   }
 
   delete(id: string, event: Event): void {

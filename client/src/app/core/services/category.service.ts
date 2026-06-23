@@ -54,6 +54,20 @@ export class CategoryService {
       .pipe(tap(() => this._categories.update((list) => list.filter((c) => c._id !== id))));
   }
 
+  /** Icon/color badges for a recipe's assigned category ids. */
+  badgesFor(categoryIds: string[]): Array<{ id: string; icon: string; color: string }> {
+    const byId = new Map(this._categories().map((category) => [category._id, category]));
+
+    return (categoryIds ?? [])
+      .map((id) => byId.get(id))
+      .filter((category): category is Category => !!category)
+      .map((category) => ({
+        id: category._id,
+        icon: category.icon,
+        color: category.color,
+      }));
+  }
+
   /** Ids of a category and all of its descendants — used to block invalid parent choices. */
   descendantIds(id: string): Set<string> {
     const result = new Set<string>([id]);

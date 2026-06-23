@@ -35,6 +35,12 @@
         }
       </div>
 
+      @if (recipe()!.instructions.length > 0) {
+        <a class="btn-cooking" [routerLink]="['/cooking', recipe()!._id]">
+          🍳 {{ 'RECIPES.COOKING_MODE' | translate }}
+        </a>
+      }
+
       <section class="detail-section">
         <h2>{{ 'RECIPES.INGREDIENTS' | translate }}</h2>
         <ul class="ingredient-list">

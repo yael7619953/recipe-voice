@@ -1,11 +1,21 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { of, switchMap } from 'rxjs';
+import { CategoryTreeNode } from '../../../core/models/category.model';
+import { CategoryService } from '../../../core/services/category.service';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { Recipe, RecipeDraft } from '../../../core/models/recipe.model';
+
+interface FlatCategoryOption {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  depth: number;
+}
 
 @Component({
   selector: 'app-recipe-form',
@@ -16,6 +26,7 @@ import { Recipe, RecipeDraft } from '../../../core/models/recipe.model';
 export class RecipeFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private recipeService = inject(RecipeService);
+  private categoryService = inject(CategoryService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -26,6 +37,13 @@ export class RecipeFormComponent implements OnInit {
   errorKey = signal<string | null>(null);
   selectedImage = signal<File | null>(null);
   imagePreview = signal<string | null>(null);
+  categoriesDialogOpen = signal(false);
+  selectedCategoryIds = signal<string[]>([]);
+  categoryOptions = computed<FlatCategoryOption[]>(() => flattenCategoryTree(this.categoryService.tree()));
+  selectedCategories = computed(() => {
+    const ids = new Set(this.selectedCategoryIds());
+    return this.categoryService.categories().filter((category) => ids.has(category._id));
+  });
   private recipeId: string | null = null;
 
   form: FormGroup = this.fb.group({
@@ -41,6 +59,7 @@ export class RecipeFormComponent implements OnInit {
     notes: [''],
     isFavorite: [false],
     imageUrl: [''],
+    categories: [[] as string[]],
   });
 
   get ingredientsArray(): FormArray {
@@ -56,6 +75,11 @@ export class RecipeFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.categoryService
+      .load()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+
     this.recipeId = this.route.snapshot.paramMap.get('id');
     if (this.recipeId) {
       this.isEdit.set(true);
@@ -106,7 +130,29 @@ export class RecipeFormComponent implements OnInit {
       notes: r.notes ?? '',
       isFavorite: r.isFavorite,
       imageUrl: r.imageUrl ?? '',
+      categories: r.categories ?? [],
     });
+    this.selectedCategoryIds.set(r.categories ?? []);
+  }
+
+  openCategoriesDialog(): void {
+    this.categoriesDialogOpen.set(true);
+  }
+
+  closeCategoriesDialog(): void {
+    this.categoriesDialogOpen.set(false);
+  }
+
+  isCategorySelected(id: string): boolean {
+    return this.selectedCategoryIds().includes(id);
+  }
+
+  toggleCategory(id: string): void {
+    const next = this.isCategorySelected(id)
+      ? this.selectedCategoryIds().filter((categoryId) => categoryId !== id)
+      : [...this.selectedCategoryIds(), id];
+    this.selectedCategoryIds.set(next);
+    this.form.get('categories')!.setValue(next);
   }
 
   addIngredient(): void {
@@ -187,4 +233,21 @@ export class RecipeFormComponent implements OnInit {
       }),
     });
   }
+}
+
+function flattenCategoryTree(nodes: CategoryTreeNode[], depth = 0): FlatCategoryOption[] {
+  const options: FlatCategoryOption[] = [];
+
+  for (const node of nodes) {
+    options.push({
+      id: node._id,
+      name: node.name,
+      icon: node.icon,
+      color: node.color,
+      depth,
+    });
+    options.push(...flattenCategoryTree(node.children, depth + 1));
+  }
+
+  return options;
 }
