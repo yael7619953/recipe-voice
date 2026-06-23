@@ -79,7 +79,7 @@ export class CategoriesPageComponent implements OnInit {
     this.recipesError.set(null);
 
     this.recipeService
-      .list(page, 20, category._id)
+      .list(page, 20, { category: category._id })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
