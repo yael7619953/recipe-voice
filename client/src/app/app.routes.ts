@@ -19,4 +19,9 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/categories/categories.routes').then((m) => m.CATEGORIES_ROUTES),
   },
+  {
+    path: 'cooking',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/cooking/cooking.routes').then((m) => m.cookingRoutes),
+  },
 ];

@@ -27,10 +27,88 @@
   } @else {
     <app-category-tree
       [nodes]="tree()"
+      [selectedId]="selectedCategoryId()"
+      (select)="selectCategory($event)"
       (edit)="openEdit($event)"
       (remove)="handleDelete($event)"
       (addChild)="openAddChild($event)"
     />
+
+    @if (selectedCategory(); as category) {
+      <section class="recipes-panel" aria-live="polite">
+        <header class="recipes-panel__head">
+          <div class="recipes-panel__heading">
+            <h2 class="recipes-panel__title">
+              {{ 'categories.recipes.title' | translate: { name: category.name } }}
+            </h2>
+            <p class="recipes-panel__subtitle">{{ 'categories.recipes.hint' | translate }}</p>
+          </div>
+          <button type="button" class="btn btn--ghost" (click)="clearCategoryFilter()">
+            {{ 'categories.recipes.clearFilter' | translate }}
+          </button>
+        </header>
+
+        @if (recipesLoading()) {
+          <p class="state">…</p>
+        } @else if (recipesError()) {
+          <div class="alert" role="alert">{{ recipesError()! | translate }}</div>
+        } @else if (recipes().length === 0) {
+          <p class="recipes-panel__empty">{{ 'categories.recipes.empty' | translate }}</p>
+        } @else {
+          <ul class="recipe-grid">
+            @for (recipe of recipes(); track recipe._id) {
+              <li
+                class="recipe-card"
+                (click)="navigateToRecipe(recipe._id)"
+                (keydown.enter)="navigateToRecipe(recipe._id)"
+                tabindex="0"
+                role="button"
+              >
+                <div class="recipe-card__image">
+                  @if (recipe.imageUrl) {
+                    <img [src]="recipe.imageUrl" [alt]="recipe.title" />
+                  } @else {
+                    <div class="recipe-card__no-image" aria-hidden="true">🍽️</div>
+                  }
+                  @if (categoryBadges(recipe).length > 0) {
+                    <div class="recipe-card__badges">
+                      @for (badge of categoryBadges(recipe); track badge.id) {
+                        <span
+                          class="recipe-card__badge"
+                          [style.--cat-color]="badge.color"
+                          aria-hidden="true"
+                        >
+                          {{ badge.icon }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+                <div class="recipe-card__footer">
+                  <h3 class="recipe-card__title">{{ recipe.title }}</h3>
+                </div>
+              </li>
+            }
+          </ul>
+
+          @if (recipesTotalPages() > 1) {
+            <div class="pagination">
+              <button type="button" [disabled]="recipesPage() === 1" (click)="loadRecipes(recipesPage() - 1)">
+                ‹
+              </button>
+              <span>{{ recipesPage() }} / {{ recipesTotalPages() }}</span>
+              <button
+                type="button"
+                [disabled]="recipesPage() === recipesTotalPages()"
+                (click)="loadRecipes(recipesPage() + 1)"
+              >
+                ›
+              </button>
+            </div>
+          }
+        }
+      </section>
+    }
   }
 </section>
 

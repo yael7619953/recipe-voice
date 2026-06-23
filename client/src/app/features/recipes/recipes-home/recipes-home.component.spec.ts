@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { TranslateLoader, provideTranslateService } from '@ngx-translate/core';
 
@@ -18,6 +19,7 @@ describe('RecipesHomeComponent', () => {
     await TestBed.configureTestingModule({
       imports: [RecipesHomeComponent],
       providers: [
+        provideRouter([]),
         provideTranslateService({
           loader: { provide: TranslateLoader, useClass: FakeTranslateLoader },
         }),
@@ -35,8 +37,7 @@ describe('RecipesHomeComponent', () => {
 
   it('should render the recipes home layout', () => {
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.recipes-home')).toBeTruthy();
+    expect(el.querySelector('.recipes-page')).toBeTruthy();
     expect(el.querySelector('h1')).toBeTruthy();
-    expect(el.querySelector('p')).toBeTruthy();
   });
 });

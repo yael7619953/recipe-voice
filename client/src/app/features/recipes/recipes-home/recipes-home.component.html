@@ -1,7 +1,10 @@
 <main class="recipes-page">
   <header class="recipes-header">
     <h1 class="recipes-title">{{ 'RECIPES.TITLE' | translate }}</h1>
-    <a class="btn-primary" routerLink="/recipes/new">{{ 'RECIPES.NEW' | translate }}</a>
+    <div class="recipes-header__actions">
+      <a class="btn-secondary" routerLink="/categories">{{ 'RECIPES.CATEGORIES' | translate }}</a>
+      <a class="btn-primary" routerLink="/recipes/new">{{ 'RECIPES.NEW' | translate }}</a>
+    </div>
   </header>
 
   <div class="filter-bar">
@@ -48,6 +51,19 @@
               <img [src]="recipe.imageUrl" [alt]="recipe.title" />
             } @else {
               <div class="recipe-card__no-image">🍽️</div>
+            }
+            @if (categoryBadges(recipe).length > 0) {
+              <div class="recipe-card__badges">
+                @for (badge of categoryBadges(recipe); track badge.id) {
+                  <span
+                    class="recipe-card__badge"
+                    [style.--cat-color]="badge.color"
+                    aria-hidden="true"
+                  >
+                    {{ badge.icon }}
+                  </span>
+                }
+              </div>
             }
           </div>
           <div class="recipe-card__footer">

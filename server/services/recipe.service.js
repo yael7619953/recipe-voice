@@ -42,11 +42,39 @@ async function validateCategories(userId, categoryIds) {
   }
 }
 
-function buildListFilter(userId, { category, favorite, q } = {}) {
+async function resolveCategoryIdsWithDescendants(userId, categoryId) {
+  const categories = await Category.find({ userId }).select('_id parentCategory').lean();
+  const owned = categories.some((c) => String(c._id) === String(categoryId));
+
+  if (!owned) {
+    throw new AppError('Category not found', 404);
+  }
+
+  const ids = new Set([String(categoryId)]);
+  let added = true;
+
+  while (added) {
+    added = false;
+    for (const category of categories) {
+      const parentId = category.parentCategory ? String(category.parentCategory) : null;
+      const id = String(category._id);
+
+      if (parentId && ids.has(parentId) && !ids.has(id)) {
+        ids.add(id);
+        added = true;
+      }
+    }
+  }
+
+  return [...ids];
+}
+
+async function buildListFilter(userId, { category, favorite, q } = {}) {
   const filter = { userId };
 
   if (category) {
-    filter.categories = category;
+    const categoryIds = await resolveCategoryIdsWithDescendants(userId, category);
+    filter.categories = { $in: categoryIds };
   }
 
   if (favorite === true || favorite === 'true') {
@@ -118,7 +146,7 @@ function pickPatchFields(data) {
 }
 
 export async function listByUser(userId, query = {}) {
-  const filter = buildListFilter(userId, query);
+  const filter = await buildListFilter(userId, query);
   const { page, limit, skip } = parsePagination(query);
 
   const [items, total] = await Promise.all([

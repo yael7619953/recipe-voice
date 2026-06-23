@@ -394,7 +394,7 @@ List recipes for the authenticated user.
 
 | Param | Type | Description |
 | ----- | ---- | ----------- |
-| `category` | string | Filter by category `_id` |
+| `category` | string | Filter by category `_id`, including recipes assigned to descendant subcategories |
 | `favorite` | boolean | When `true`, only favorites |
 | `q` | string | Optional title search (case-insensitive) |
 | `page` | number | Page number (default `1`, minimum `1`) |
@@ -654,3 +654,4 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-21 | Add `GET /auth/me` — returns authenticated user profile for OAuth token bootstrap |
 | 2026-06-21 | Add section 6 `POST /ai/extract` — AI recipe extraction from PDF / image / Word `.docx`; add status codes 422, 502, 503 |
 | 2026-06-21 | AI import provider switched from OpenAI to Gemini (`GEMINI_API_KEY`); voice/STT still planned as Whisper |
+| 2026-06-21 | `GET /recipes?category=` — includes recipes in descendant subcategories of the filtered category |

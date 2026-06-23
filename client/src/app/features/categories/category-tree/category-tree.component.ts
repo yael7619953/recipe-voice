@@ -12,10 +12,12 @@ import { CategoryTreeNode } from '../../../core/models/category.model';
 export class CategoryTreeComponent {
   @Input({ required: true }) nodes: CategoryTreeNode[] = [];
   @Input() depth = 0;
+  @Input() selectedId: string | null = null;
 
   @Output() edit = new EventEmitter<CategoryTreeNode>();
   @Output() remove = new EventEmitter<CategoryTreeNode>();
   @Output() addChild = new EventEmitter<CategoryTreeNode>();
+  @Output() select = new EventEmitter<CategoryTreeNode>();
 
   private collapsed = signal<Set<string>>(new Set());
 
