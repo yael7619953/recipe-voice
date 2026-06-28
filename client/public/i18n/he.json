@@ -156,6 +156,30 @@
     "AUTO_ADVANCE_IN": "שלב הבא בעוד {{seconds}} ש׳",
     "AUTO_ADVANCE_CANCEL": "הישאר כאן"
   },
+  "aiImport": {
+    "title": "ייבוא מתכון עם AI",
+    "subtitle": "העלי קובץ ונהפוך אותו למתכון שתוכלי לבדוק ולערוך.",
+    "steps": {
+      "type": "בחירת סוג קובץ",
+      "upload": "העלאת קובץ"
+    },
+    "fileType": {
+      "pdf": "PDF",
+      "image": "תמונה",
+      "word": "Word"
+    },
+    "fileTypeHint": {
+      "pdf": "עמוד מספר בישול או סריקה ב-PDF",
+      "image": "צילום או צילום מסך של מתכון",
+      "word": "מסמך Word ‏(‎.docx‎)"
+    },
+    "back": "חזרה",
+    "dropHint": "גררי קובץ לכאן, או",
+    "browse": "בחרי קובץ להעלאה",
+    "clear": "הסרת הקובץ",
+    "extract": "חילוץ המתכון",
+    "comingSoon": "חילוץ ה-AI יחובר בקרוב."
+  },
   "VALIDATION": {
     "REQUIRED": "שדה חובה",
     "EMAIL": "כתובת אימייל לא תקינה",

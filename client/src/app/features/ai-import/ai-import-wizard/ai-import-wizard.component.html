@@ -1,0 +1,63 @@
+<section class="page">
+  <header class="page__head">
+    <div class="page__heading">
+      <h1 class="page__title">{{ 'aiImport.title' | translate }}</h1>
+      <p class="page__subtitle">{{ 'aiImport.subtitle' | translate }}</p>
+    </div>
+  </header>
+
+  <ol class="steps" aria-hidden="true">
+    <li class="steps__item" [class.steps__item--active]="step() === 'type'">
+      <span class="steps__dot">1</span>
+      <span class="steps__label">{{ 'aiImport.steps.type' | translate }}</span>
+    </li>
+    <li class="steps__item" [class.steps__item--active]="step() === 'upload'">
+      <span class="steps__dot">2</span>
+      <span class="steps__label">{{ 'aiImport.steps.upload' | translate }}</span>
+    </li>
+  </ol>
+
+  @if (step() === 'type') {
+    <div class="type-grid">
+      @for (option of fileTypeOptions; track option.type) {
+        <button type="button" class="type-card" (click)="chooseType(option.type)">
+          <span class="type-card__icon" aria-hidden="true">{{ option.icon }}</span>
+          <span class="type-card__title">{{ 'aiImport.fileType.' + option.type | translate }}</span>
+          <span class="type-card__hint">{{ 'aiImport.fileTypeHint.' + option.type | translate }}</span>
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="upload">
+      <button type="button" class="btn btn--ghost upload__back" (click)="backToType()">
+        {{ 'aiImport.back' | translate }}
+      </button>
+
+      <label
+        class="dropzone"
+        [class.dropzone--active]="dragging()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave()"
+        (drop)="onDrop($event)"
+      >
+        <input type="file" class="dropzone__input" [accept]="accept()" (change)="onFileSelect($event)" />
+        @if (selectedFile(); as file) {
+          <span class="dropzone__icon" aria-hidden="true">✅</span>
+          <span class="dropzone__file">{{ file.name }}</span>
+          <button type="button" class="btn btn--ghost dropzone__clear" (click)="clearFile()">
+            {{ 'aiImport.clear' | translate }}
+          </button>
+        } @else {
+          <span class="dropzone__icon" aria-hidden="true">⬆️</span>
+          <span class="dropzone__text">{{ 'aiImport.dropHint' | translate }}</span>
+          <span class="dropzone__browse">{{ 'aiImport.browse' | translate }}</span>
+        }
+      </label>
+
+      <button type="button" class="btn btn--primary upload__submit" [disabled]="!canContinue()">
+        {{ 'aiImport.extract' | translate }}
+      </button>
+      <p class="upload__note">{{ 'aiImport.comingSoon' | translate }}</p>
+    </div>
+  }
+</section>

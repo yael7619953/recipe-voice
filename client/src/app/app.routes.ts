@@ -24,4 +24,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadChildren: () => import('./features/cooking/cooking.routes').then((m) => m.cookingRoutes),
   },
+  {
+    path: 'ai-import',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/ai-import/ai-import.routes').then((m) => m.AI_IMPORT_ROUTES),
+  },
 ];

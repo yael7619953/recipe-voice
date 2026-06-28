@@ -156,6 +156,30 @@
     "AUTO_ADVANCE_IN": "Next step in {{seconds}}s",
     "AUTO_ADVANCE_CANCEL": "Stay here"
   },
+  "aiImport": {
+    "title": "Import a recipe with AI",
+    "subtitle": "Upload a file and we'll turn it into a recipe you can review.",
+    "steps": {
+      "type": "Choose file type",
+      "upload": "Upload file"
+    },
+    "fileType": {
+      "pdf": "PDF",
+      "image": "Image",
+      "word": "Word"
+    },
+    "fileTypeHint": {
+      "pdf": "A PDF cookbook page or scan",
+      "image": "A photo or screenshot of a recipe",
+      "word": "A Word document (.docx)"
+    },
+    "back": "Back",
+    "dropHint": "Drag a file here, or",
+    "browse": "browse to upload",
+    "clear": "Remove file",
+    "extract": "Extract recipe",
+    "comingSoon": "AI extraction will be connected soon."
+  },
   "VALIDATION": {
     "REQUIRED": "Required field",
     "EMAIL": "Invalid email address",
