@@ -1,110 +1,76 @@
 # AGENTS.md
 
-Guidance for AI agents and developers working in this repository.
+Guide for AI agents and developers in this monorepo.
 
-## Project Overview
+## Scoped guides
 
-Recipe management platform with a **voice kitchen assistant**: recipes are organized
-in hierarchical categories, cooking steps are read aloud (TTS) while the app listens
-continuously for voice commands (STT), and recipes can be imported via AI from
-PDF / image / live audio.
+| Path | When to read |
+| ---- | ------------ |
+| [`client/AGENTS.md`](client/AGENTS.md) | Angular UI, i18n, voice/cooking client |
+| [`server/AGENTS.md`](server/AGENTS.md) | Express API, Mongoose, uploads, auth |
+| [`CONTRACTS.md`](CONTRACTS.md) | REST endpoint shapes and changelog |
 
-## Tech Stack
-
-| Layer    | Technology |
-| -------- | ---------- |
-| Backend  | Node.js + Express 5 + Mongoose 9 + MongoDB (ES Modules) |
-| Frontend | Angular 21 (standalone components) |
-| Auth     | JWT + bcrypt + Google OAuth (passport) |
-| i18n     | ngx-translate — Hebrew (RTL) + English (LTR) |
-| AI/Voice | Whisper (STT) + Web Speech API (TTS) + LLM structured output |
-| CI/CD    | GitHub Actions |
-
-## Repository Layout
-
-```text
-server/                # Express API (MVC + services)
-  app.js               # entry: middleware + mount routers (keep minimal)
-  config/              # db.js, passport.js
-  models/              # user, category, recipe (Mongoose, lowercase refs)
-  controllers/         # thin: req/res only
-  services/            # business logic, framework-agnostic
-  routes/index.js      # router aggregator -> app.use('/api', routes)
-  middleware/          # auth, error, upload, validate
-client/src/app/        # Angular standalone app
-  core/                # guards, interceptors, services, models
-  features/            # lazy-loaded feature modules (auth, recipes, cooking, ...)
-  shared/              # reusable components, pipes, directives
-plans/                 # planning docs (no code)
-```
-
-## Setup & Commands
+## Quick start
 
 ```bash
-# Server (from server/)
-npm install
-npm run dev          # nodemon, http://localhost:5000
+# Server — http://localhost:5000
+cd server && npm install && npm run dev
 
-# Client (from client/)
-npm install
-npm start            # ng serve, http://localhost:4200
-npm run build
-npm test             # vitest
+# Client — http://localhost:4200
+cd client && npm install && npm start
 ```
 
-Copy `server/.env.example` to `server/.env`. Required vars: `MONGO_URI`, `JWT_SECRET`,
-Google OAuth keys, and LLM keys. **Never commit secrets** — use `.env` / GitHub Secrets only.
+Copy `server/.env.example` → `server/.env`. Required: `MONGO_URI`, `JWT_SECRET`, Google OAuth keys, LLM keys. **Never commit secrets.**
 
-## Conventions
+## Project
 
-- **Code comments: English only.** Write only comments that explain non-obvious intent.
-- **Server**: ES Modules (`import`/`export`), `async/await`. Keep controllers thin;
-  put logic in `services/`. Register every router via `routes/index.js`, never in `app.js`.
-- **Client**: standalone components, lazy `loadChildren` per feature in `app.routes.ts`.
-  Use logical CSS (`margin-inline`, `text-align: start`) for RTL/LTR support.
-- **Security**: protect routes with `auth.middleware`; always filter data by `userId`.
-- **Style**: Prettier (`printWidth: 100`, single quotes) on the client.
+Recipe platform with hierarchical categories, a **voice kitchen assistant** (TTS read-aloud + STT commands), and **AI recipe import** from PDF / image / audio.
 
-## Git & Commits
+| Layer | Stack |
+| ----- | ----- |
+| Server | Node.js ES Modules, Express 5, Mongoose 9, MongoDB |
+| Client | Angular 21 standalone, ngx-translate (Hebrew RTL + English LTR) |
+| Auth | JWT + bcrypt + Google OAuth |
+| AI/Voice | Whisper (STT), Web Speech API (TTS), LLM structured output |
 
-- Flow: `main` (stable) ← `develop` (integration) ← `feature/*` branches.
-- Merge to `develop` only via PR with green CI; prefer squash merge.
-- **Conventional Commits** — `type(scope): subject`, e.g.:
-  - `feat(auth): add Google OAuth callback`
-  - `fix(recipes): correct userId filter on list endpoint`
-  - `chore(ci): add server test job`
-- Common types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`.
-- **Commit message style:** subject line uses present tense and describes *what* was added/changed. Optional body explains *why* or lists key details. Never include internal task numbers, milestone labels, or step counters — keep messages professional and self-contained.
+## Layout
 
-## Agent Rules
+```text
+server/           Express API (MVC + services) — see server/AGENTS.md
+client/src/app/   Angular app — see client/AGENTS.md
+CONTRACTS.md      API contract + changelog
+plans/            Planning docs (no code)
+```
 
-- Edit isolated files; avoid touching shared entry files (`app.js`, `app.routes.ts`)
-  from multiple branches in parallel.
-- Add new dependencies via the package manager (do not hand-edit `package.json` versions).
-- Run lint/build/tests before proposing a merge.
-- **Server errors:** always `throw new AppError(message, statusCode)` — the `errorHandler` in
-  `error.middleware.js` maps it to the correct HTTP response. Never throw a plain `Error` for
-  expected HTTP errors (4xx).
-- **New router:** export from its own `*.routes.js` and register in `routes/index.js`. Never
-  add `app.use(...)` directly in `app.js`.
-- **Uploads:** import from `upload.middleware.js` — use `uploadPdf`, `uploadImage`,
-  `uploadAudio`, or `uploadMedia` as route-level middleware. Field name for audio uploads is
-  `audio`; for all other file types it is `file`.
-- **Client auth state:** `TokenStorageService` owns localStorage (token + user). `AuthService`
-  wraps it with Angular signals. Never read `localStorage` for auth data outside these two
-  services.
-- **Shared branch `feature/ai-import`:** Shira owns `ai.service.js` / `ai.controller.js` /
-  `ai.routes.js`; Yael owns `voice.service.js` / `voice.controller.js` / `voice.routes.js` +
-  the import wizard in the client. Do not edit the other person's files on this branch.
-- **CONTRACTS.md:** when adding or changing an endpoint, update the relevant section and
-  append a row to the Changelog table at the bottom of the file.
+## Cross-cutting rules
 
-## Lessons Learned
+- **Security:** protect routes with `auth.middleware`; set `req.userId` from JWT. Every user-owned query must filter by `{ userId: req.userId }`.
+- **Dependencies:** add via `npm install` — never hand-edit version fields in `package.json`.
+- **Shared entry files:** avoid parallel edits to `server/app.js`, `client/src/app/app.routes.ts`, `client/src/app/app.config.ts`.
+- **Comments:** English only; explain non-obvious intent.
+- **API changes:** update `CONTRACTS.md` and append a row to its Changelog table.
 
-These are mistakes that were made and must not be repeated:
+## Git
 
-- **Read before edit:** always read a file with the Read tool before modifying it — never edit from memory or assumptions.
-- **One entry point for routes:** never add `app.use(...)` in `app.js`; always register in `routes/index.js`. This was violated once and caused duplicate route registration.
-- **No hand-editing package.json:** dependency versions must be added via `npm install <pkg>` — hand-editing caused a lockfile mismatch that broke CI.
-- **Validate middleware placement:** `validate(schema)` must be placed *before* the controller in the route definition, never after.
-- **Do not touch peer files on shared branches:** on `feature/ai-import`, Shira owns `ai.*` files and Yael owns `voice.*` files — crossing this boundary caused a merge conflict that required manual resolution.
+- Flow: `main` ← `develop` ← `feature/*`; merge to `develop` via PR with green CI (squash preferred).
+- **Conventional Commits:** `type(scope): subject` — e.g. `feat(auth): add Google OAuth callback`.
+- Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`.
+- Subject: present tense, describes *what* changed; optional body explains *why*. No internal task IDs or step counters.
+
+## Team boundaries (`feature/ai-import`)
+
+| Owner | Files |
+| ----- | ----- |
+| Shira | `server/services/ai.service.js`, `ai.controller.js`, `ai.routes.js` |
+| Yael | `server/services/voice.service.js`, `voice.controller.js`, `voice.routes.js`, client `features/ai-import/` |
+
+Do not edit the other owner's files on this branch.
+
+## Pitfalls
+
+- Read a file before editing — never edit from memory.
+- Register routers only in `server/routes/index.js`, never in `app.js`.
+- Controllers: wrap with `asyncHandler`; services: throw `AppError`, not plain `Error`.
+- Uploads: use exports from `upload.middleware.js` — never instantiate `multer()` directly.
+- Validation middleware must come **before** the controller in route definitions.
+- Client auth state: only `TokenStorageService` and `AuthService` touch `localStorage`.

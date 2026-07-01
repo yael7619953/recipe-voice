@@ -1,69 +1,102 @@
 # AGENTS.md — Server
 
-Guidance for AI agents and developers working in the **Express API** (`server/`).
-See the root `AGENTS.md` for project-wide context.
+Express 5 REST API (ES Modules). See root [`AGENTS.md`](../AGENTS.md) for monorepo context.
 
-## Overview
+## Commands
 
-REST API for the recipe platform: authentication, recipe/category CRUD, and the
-AI import + voice-assistant endpoints. Written in **ES Modules** with `async/await`.
+```bash
+cd server
+npm install
+npm run dev          # nodemon → http://localhost:5000
+npm start            # node app.js
+```
 
-## Tech Stack
+Verify the app boots before proposing a merge.
 
-| Concern  | Technology |
-| -------- | ---------- |
-| Runtime  | Node.js (ES Modules, `"type": "module"`) |
-| Web      | Express 5 |
-| Database | MongoDB via Mongoose 9 |
-| Auth     | JWT + bcrypt + Google OAuth (passport) |
-| Config   | dotenv |
-| CORS     | cors |
-| Dev      | nodemon |
+## Environment
+
+Copy `.env.example` → `.env`. Required: `MONGO_URI`, `JWT_SECRET`, Google OAuth keys, LLM keys.
+`config/db.js` falls back to `mongodb://localhost:27017/recipeDB` when `MONGO_URI` is unset.
+**Never commit secrets** — use `.env` locally and GitHub Secrets in CI.
 
 ## Layout
 
 ```text
 server/
-  app.js               # entry: middleware + mount routers (keep minimal)
-  config/              # db.js (Mongoose connection), passport.js
-  models/              # user, category, recipe (Mongoose, lowercase model names/refs)
-  controllers/         # thin: req/res handling only
-  services/            # business logic, framework-agnostic
-  routes/index.js      # router aggregator -> app.use('/api', routes)
-  middleware/          # auth, error, upload, validate
+  app.js               # middleware + mount routers only (keep minimal)
+  config/              db.js, passport.js, loadEnv.js
+  models/              user, category, recipe (lowercase refs)
+  controllers/         thin req/res — wrap every handler with asyncHandler
+  services/            business logic (framework-agnostic)
+  routes/index.js      register all routers → app.use('/api', routes)
+  middleware/          auth, error, upload, validate
+  validators/          Joi schemas per domain
+  utils/               asyncHandler, jwt, recipeSchema
 ```
 
-## Commands
+Current API mounts: `/api/auth`, `/categories`, `/recipes`, `/ai` (+ `/health`).
 
-```bash
-# from server/
-npm install
-npm run dev          # nodemon, http://localhost:5000
-npm start            # node app.js
+## Patterns
+
+### Controllers
+
+```javascript
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { AppError } from '../middleware/error.middleware.js';
+
+export const listHandler = asyncHandler(async (req, res) => {
+  const data = await recipeService.listByUser(req.userId, req.validatedQuery);
+  res.json(data);
+});
 ```
 
-## Environment
+- **asyncHandler** on every controller export — no `try/catch` in controllers.
+- Controllers delegate to services; no business logic in controllers.
 
-Copy `server/.env.example` to `server/.env`. Required vars:
-`MONGO_URI`, `JWT_SECRET`, Google OAuth keys, and LLM keys.
-`config/db.js` falls back to `mongodb://localhost:27017/recipeDB` when `MONGO_URI`
-is unset. **Never commit secrets** — use `.env` / GitHub Secrets only.
+### Services
+
+- Throw `new AppError(message, statusCode)` for expected HTTP errors — never plain `Error`.
+- `errorHandler` in `error.middleware.js` maps errors to JSON responses.
+
+### Routes
+
+```javascript
+router.post('/', validateBody(createSchema), createHandler);  // validate BEFORE handler
+router.post('/image', uploadImage, uploadImageHandler);       // upload as middleware
+```
+
+- Register new routers in `routes/index.js` — never mount directly in `app.js`.
+- `authMiddleware` sets `req.userId`; always pass it into service calls.
+- **userId filter:** every query returning user data must include `{ userId }`.
+
+### Uploads
+
+Import from `upload.middleware.js` — never call `multer()` directly:
+
+| Export | Field name | Types |
+| ------ | ---------- | ----- |
+| `uploadPdf` | `file` | PDF |
+| `uploadImage` | `file` | images |
+| `uploadAudio` | `audio` | webm, mp3, wav, m4a |
+| `uploadMedia` | `file` | pdf + image + audio |
+| `uploadAiMedia` | `file` | pdf + image + docx |
 
 ## Conventions
 
-- **ES Modules** (`import`/`export`) and `async/await` everywhere; include the `.js`
-  extension in relative imports (e.g. `import connectDB from './config/db.js'`).
-- **Thin controllers**: controllers only handle `req`/`res`; put all logic in `services/`.
-- **Register routers via `routes/index.js`**, never directly in `app.js`. Keep `app.js`
-  limited to middleware setup and `app.listen`.
-- **Mongoose**: model names and refs are **lowercase** (`'user'`, `'category'`,
-  `'recipe'`). Add indexes for fields used in frequent queries.
-- **Security**: protect routes with `auth.middleware`; **always filter data by `userId`**
-  so users only access their own recipes/categories.
-- **Code comments: English only**, and only for non-obvious intent.
+- **ES Modules:** include `.js` extension in relative imports.
+- **Mongoose:** model names and refs are lowercase (`'user'`, `'category'`, `'recipe'`). Index fields used in frequent queries.
+- **Comments:** English only, non-obvious intent only.
+- **API changes:** update `CONTRACTS.md` and append a Changelog row.
 
-## Agent Rules
+## Agent rules
 
-- Avoid editing the shared entry file `app.js` from multiple branches in parallel.
+- Avoid parallel edits to `app.js`.
 - Add dependencies via `npm install` — do not hand-edit `package.json` versions.
-- Run the app (`npm run dev`) to verify it boots before proposing a merge.
+- On branch `feature/ai-import`, Shira owns `ai.service.js` / `ai.controller.js` / `ai.routes.js`; Yael owns `voice.*` — do not cross boundaries.
+
+## Pitfalls
+
+- `validate(schema)` after the controller is a silent bug — always place it before.
+- Reusing or re-creating multer instances breaks upload handling — use the shared exports.
+- Missing `{ userId: req.userId }` in a DB filter is a security vulnerability.
+- Mounting routes in both `app.js` and `routes/index.js` causes duplicate registration.
