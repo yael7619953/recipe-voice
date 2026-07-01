@@ -161,7 +161,8 @@
     "subtitle": "Upload a file and we'll turn it into a recipe you can review.",
     "steps": {
       "type": "Choose file type",
-      "upload": "Upload file"
+      "upload": "Upload file",
+      "preview": "Review & edit"
     },
     "fileType": {
       "pdf": "PDF",
@@ -178,7 +179,19 @@
     "browse": "browse to upload",
     "clear": "Remove file",
     "extract": "Extract recipe",
-    "comingSoon": "AI extraction will be connected soon."
+    "extracting": "Extracting recipe...",
+    "previewHint": "Review and adjust what the AI extracted before saving.",
+    "save": "Save recipe",
+    "saving": "Saving...",
+    "errors": {
+      "extract": "Recipe extraction failed. Please try again.",
+      "tooLarge": "The file is too large. Try a smaller file.",
+      "unsupported": "Unsupported file type. Use a PDF, image, or Word (.docx).",
+      "unreadable": "We couldn't read any content from the file. Try a clearer file.",
+      "aiFailed": "The AI service is unavailable right now. Please try again later.",
+      "notConfigured": "The AI service is not configured on the server.",
+      "save": "Saving the recipe failed. Please try again."
+    }
   },
   "VALIDATION": {
     "REQUIRED": "Required field",

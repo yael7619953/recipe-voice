@@ -15,6 +15,10 @@
       <span class="steps__dot">2</span>
       <span class="steps__label">{{ 'aiImport.steps.upload' | translate }}</span>
     </li>
+    <li class="steps__item" [class.steps__item--active]="step() === 'preview'">
+      <span class="steps__dot">3</span>
+      <span class="steps__label">{{ 'aiImport.steps.preview' | translate }}</span>
+    </li>
   </ol>
 
   @if (step() === 'type') {
@@ -27,9 +31,14 @@
         </button>
       }
     </div>
-  } @else {
+  } @else if (step() === 'upload') {
     <div class="upload">
-      <button type="button" class="btn btn--ghost upload__back" (click)="backToType()">
+      <button
+        type="button"
+        class="btn btn--ghost upload__back"
+        (click)="backToType()"
+        [disabled]="extracting()"
+      >
         {{ 'aiImport.back' | translate }}
       </button>
 
@@ -40,11 +49,22 @@
         (dragleave)="onDragLeave()"
         (drop)="onDrop($event)"
       >
-        <input type="file" class="dropzone__input" [accept]="accept()" (change)="onFileSelect($event)" />
+        <input
+          type="file"
+          class="dropzone__input"
+          [accept]="accept()"
+          [disabled]="extracting()"
+          (change)="onFileSelect($event)"
+        />
         @if (selectedFile(); as file) {
           <span class="dropzone__icon" aria-hidden="true">✅</span>
           <span class="dropzone__file">{{ file.name }}</span>
-          <button type="button" class="btn btn--ghost dropzone__clear" (click)="clearFile()">
+          <button
+            type="button"
+            class="btn btn--ghost dropzone__clear"
+            (click)="clearFile()"
+            [disabled]="extracting()"
+          >
             {{ 'aiImport.clear' | translate }}
           </button>
         } @else {
@@ -54,10 +74,146 @@
         }
       </label>
 
-      <button type="button" class="btn btn--primary upload__submit" [disabled]="!canContinue()">
-        {{ 'aiImport.extract' | translate }}
+      @if (extractErrorKey(); as errKey) {
+        <p class="alert alert--error" role="alert">{{ errKey | translate }}</p>
+      }
+
+      <button
+        type="button"
+        class="btn btn--primary upload__submit"
+        [disabled]="!canExtract()"
+        (click)="extract()"
+      >
+        @if (extracting()) {
+          <span class="spinner" aria-hidden="true"></span>
+          {{ 'aiImport.extracting' | translate }}
+        } @else {
+          {{ 'aiImport.extract' | translate }}
+        }
       </button>
-      <p class="upload__note">{{ 'aiImport.comingSoon' | translate }}</p>
     </div>
+  } @else {
+    <form class="preview" [formGroup]="form" (ngSubmit)="save()">
+      <p class="preview__hint">{{ 'aiImport.previewHint' | translate }}</p>
+
+      <label class="field">
+        <span class="field__label">{{ 'RECIPES.FORM.FIELD.TITLE' | translate }}</span>
+        <input class="field__input" type="text" formControlName="title" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">{{ 'RECIPES.FORM.FIELD.DESCRIPTION' | translate }}</span>
+        <textarea class="field__input" rows="2" formControlName="description"></textarea>
+      </label>
+
+      <fieldset class="group" formArrayName="ingredients">
+        <legend class="group__legend">{{ 'RECIPES.FORM.FIELD.INGREDIENTS' | translate }}</legend>
+        @for (ctrl of ingredientsArray.controls; track $index) {
+          <div class="row">
+            <input
+              class="field__input"
+              type="text"
+              [formControlName]="$index"
+              [placeholder]="'RECIPES.FORM.FIELD.INGREDIENT_PH' | translate"
+            />
+            <button
+              type="button"
+              class="btn btn--icon"
+              (click)="removeIngredient($index)"
+              [attr.aria-label]="'COMMON.REMOVE' | translate"
+            >
+              ✕
+            </button>
+          </div>
+        }
+        <button type="button" class="btn btn--ghost group__add" (click)="addIngredient()">
+          + {{ 'RECIPES.FORM.ADD_INGREDIENT' | translate }}
+        </button>
+      </fieldset>
+
+      <fieldset class="group" formArrayName="instructions">
+        <legend class="group__legend">{{ 'RECIPES.FORM.FIELD.INSTRUCTIONS' | translate }}</legend>
+        @for (stepCtrl of instructionsArray.controls; track $index) {
+          <div class="step" [formGroupName]="$index">
+            <div class="row">
+              <span class="step__num">{{ $index + 1 }}</span>
+              <textarea
+                class="field__input"
+                rows="2"
+                formControlName="text"
+                [placeholder]="'RECIPES.FORM.FIELD.INSTRUCTION_PH' | translate"
+              ></textarea>
+              <button
+                type="button"
+                class="btn btn--icon"
+                (click)="removeStep($index)"
+                [attr.aria-label]="'COMMON.REMOVE' | translate"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="step__timer" [formGroup]="stepTimerGroup(stepCtrl)">
+              <label class="checkbox">
+                <input type="checkbox" formControlName="hasTimer" />
+                <span>{{ 'RECIPES.FORM.FIELD.HAS_TIMER' | translate }}</span>
+              </label>
+              @if (stepTimerGroup(stepCtrl).get('hasTimer')?.value) {
+                <label class="field field--inline">
+                  <span class="field__label">{{ 'RECIPES.FORM.FIELD.TIMER_DURATION' | translate }}</span>
+                  <input class="field__input field__input--num" type="number" min="0" formControlName="duration" />
+                </label>
+              }
+            </div>
+          </div>
+        }
+        <button type="button" class="btn btn--ghost group__add" (click)="addStep()">
+          + {{ 'RECIPES.FORM.ADD_STEP' | translate }}
+        </button>
+      </fieldset>
+
+      <div class="grid-2" formGroupName="prepTime">
+        <label class="field">
+          <span class="field__label">{{ 'RECIPES.FORM.FIELD.PREP_HOURS' | translate }}</span>
+          <input class="field__input" type="number" min="0" formControlName="hours" />
+        </label>
+        <label class="field">
+          <span class="field__label">{{ 'RECIPES.FORM.FIELD.PREP_MINUTES' | translate }}</span>
+          <input class="field__input" type="number" min="0" max="59" formControlName="minutes" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">{{ 'RECIPES.FORM.FIELD.SERVINGS' | translate }}</span>
+        <input class="field__input" type="text" formControlName="servings" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">{{ 'RECIPES.FORM.FIELD.NOTES' | translate }}</span>
+        <textarea class="field__input" rows="2" formControlName="notes"></textarea>
+      </label>
+
+      @if (saveErrorKey(); as errKey) {
+        <p class="alert alert--error" role="alert">{{ errKey | translate }}</p>
+      }
+
+      <div class="preview__actions">
+        <button
+          type="button"
+          class="btn btn--ghost"
+          (click)="backToUpload()"
+          [disabled]="saving()"
+        >
+          {{ 'aiImport.back' | translate }}
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner" aria-hidden="true"></span>
+            {{ 'aiImport.saving' | translate }}
+          } @else {
+            {{ 'aiImport.save' | translate }}
+          }
+        </button>
+      </div>
+    </form>
   }
 </section>
