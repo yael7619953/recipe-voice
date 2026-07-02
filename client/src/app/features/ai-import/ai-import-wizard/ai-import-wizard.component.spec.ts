@@ -200,9 +200,9 @@ describe('AiImportWizardComponent', () => {
       const draft = recipeService.create.mock.calls[0][0];
       // blank ingredient is filtered out
       expect(draft.ingredients).toEqual(['2 cups flour', '1 cup sugar']);
-      // timer duration zeroed when hasTimer is false, kept when true
+      // timer duration zeroed when hasTimer is false; converted from AI minutes to seconds when true
       expect(draft.instructions[0].timer).toEqual({ hasTimer: false, duration: 0 });
-      expect(draft.instructions[1].timer).toEqual({ hasTimer: true, duration: 30 });
+      expect(draft.instructions[1].timer).toEqual({ hasTimer: true, duration: 1800 });
       expect(draft.categories).toEqual([]);
       expect(draft.isFavorite).toBe(false);
       expect(navSpy).toHaveBeenCalledWith(['/recipes', 'abc123']);

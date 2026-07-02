@@ -72,6 +72,7 @@
     "TITLE": "My recipes",
     "CATEGORIES": "Categories",
     "NEW": "New recipe",
+    "IMPORT_AI": "Import with AI",
     "EMPTY": "No recipes yet. Add your first one!",
     "FILTER": {
       "SEARCH_PH": "Search by name…",

@@ -259,7 +259,8 @@ export class AiImportWizardComponent {
           text: step.text.trim(),
           timer: {
             hasTimer: step.timer.hasTimer,
-            duration: step.timer.hasTimer ? step.timer.duration : 0,
+            // AI returns duration in minutes; recipe model stores seconds
+            duration: step.timer.hasTimer ? step.timer.duration * 60 : 0,
           },
         })),
       categories: [],
