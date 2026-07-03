@@ -22,34 +22,30 @@
 
       <div class="field">
         <span class="field__label">{{ 'categories.form.icon' | translate }}</span>
-        <div class="swatches">
-          @for (icon of icons; track icon) {
-            <button
-              type="button"
-              class="swatch swatch--icon"
-              [class.swatch--active]="form.controls.icon.value === icon"
-              (click)="selectIcon(icon)"
-            >
-              {{ icon }}
-            </button>
+        <div class="emoji-trigger-wrap">
+          <button type="button" class="emoji-trigger" (click)="toggleEmojiPicker($event)">
+            {{ form.controls.icon.value }}
+          </button>
+          @if (showEmojiPicker) {
+            <div class="emoji-picker-popover" dir="ltr" (click)="$event.stopPropagation()">
+              <emoji-picker
+                #emojiPicker
+                class="emoji-picker light"
+                [attr.locale]="pickerLocale"
+                [attr.data-source]="pickerDataSource"
+                (emoji-click)="onEmojiSelect($event)"
+              ></emoji-picker>
+            </div>
           }
         </div>
       </div>
 
       <div class="field">
         <span class="field__label">{{ 'categories.form.color' | translate }}</span>
-        <div class="swatches">
-          @for (color of colors; track color) {
-            <button
-              type="button"
-              class="swatch swatch--color"
-              [class.swatch--active]="form.controls.color.value === color"
-              [style.background]="color"
-              [attr.aria-label]="color"
-              (click)="selectColor(color)"
-            ></button>
-          }
-        </div>
+        <label class="color-trigger-wrap">
+          <span class="color-trigger" [style.background]="form.controls.color.value"></span>
+          <input type="color" class="color-native-hidden" formControlName="color" />
+        </label>
       </div>
 
       <label class="field">
