@@ -14,6 +14,7 @@ import { RecipeService } from '../../../core/services/recipe.service';
 import { Recipe } from '../../../core/models/recipe.model';
 import { CookingTimerAlarmService } from '../services/cooking-timer-alarm.service';
 import { CookingTtsService } from '../services/cooking-tts.service';
+import { CookingSttService } from '../services/cooking-stt.service';
 
 type CookingPhase = 'ingredients' | 'instructions';
 
@@ -37,7 +38,7 @@ const AUTO_ADVANCE_SECONDS = 120;
   imports: [TranslatePipe, RouterLink],
   templateUrl: './cooking.component.html',
   styleUrl: './cooking.component.scss',
-  providers: [CookingTtsService, CookingTimerAlarmService],
+  providers: [CookingTtsService, CookingTimerAlarmService, CookingSttService],
   host: { '[attr.dir]': 'dir()' },
 })
 export class CookingComponent implements OnInit, OnDestroy {
@@ -47,6 +48,7 @@ export class CookingComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private tts = inject(CookingTtsService);
   private timerAlarm = inject(CookingTimerAlarmService);
+  readonly stt = inject(CookingSttService);
 
   readonly recipe = signal<Recipe | null>(null);
   readonly loading = signal(true);
@@ -113,6 +115,13 @@ export class CookingComponent implements OnInit, OnDestroy {
           this.recipe.set(r);
           this.loading.set(false);
           this.startCookingSession();
+          this.stt.attach({
+            isTtsActive: this.isTtsSpeaking,
+            onStop:     () => this.stopSpeech(),
+            onContinue: () => this.resumeSpeech(),
+            onPrevious: () => this.previous(),
+            onNext:     () => { this.cancelAutoAdvance(); this.next(); },
+          });
         },
         error: () => {
           this.errorKey.set('RECIPES.ERROR.NOT_FOUND');
@@ -126,6 +135,7 @@ export class CookingComponent implements OnInit, OnDestroy {
     this.clearTimer();
     this.timerAlarm.stop();
     this.tts.stop();
+    this.stt.destroy();
   }
 
   toggleFullRecipe(): void {

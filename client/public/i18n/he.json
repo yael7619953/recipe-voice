@@ -154,7 +154,11 @@
     "AUTO_MODE_ON": "אוטומטי ✓",
     "AUTO_MODE_OFF": "ידני",
     "AUTO_ADVANCE_IN": "שלב הבא בעוד {{seconds}} ש׳",
-    "AUTO_ADVANCE_CANCEL": "הישאר כאן"
+    "AUTO_ADVANCE_CANCEL": "הישאר כאן",
+    "STT_TOGGLE": "פקודות קוליות",
+    "STT_LISTENING": "מאזין...",
+    "STT_PAUSED_ECHO": "בהשהיה",
+    "STT_UNSUPPORTED": "לא נתמך בדפדפן זה"
   },
   "aiImport": {
     "title": "ייבוא מתכון עם AI",
