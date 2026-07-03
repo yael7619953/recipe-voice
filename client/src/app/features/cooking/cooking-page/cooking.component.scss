@@ -241,6 +241,57 @@
   }
 }
 
+// ── STT (voice commands) controls ─────────────────────────────────────────────
+
+.stt-controls {
+  display: flex;
+  justify-content: center;
+  margin-block-end: 0.25rem;
+}
+
+.stt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: #6b7280;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+
+  &--active {
+    border-color: #7c3aed;
+    background: #ede9fe;
+    color: #5b21b6;
+
+    &:hover {
+      background: #ddd6fe;
+    }
+  }
+
+  &--echo {
+    border-color: #fbbf24;
+    background: #fef9c3;
+    color: #92400e;
+  }
+
+  &__status {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.85;
+  }
+}
+
 .step-nav {
   display: flex;
   justify-content: space-between;
