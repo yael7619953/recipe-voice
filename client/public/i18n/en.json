@@ -154,7 +154,11 @@
     "AUTO_MODE_ON": "Auto ✓",
     "AUTO_MODE_OFF": "Manual",
     "AUTO_ADVANCE_IN": "Next step in {{seconds}}s",
-    "AUTO_ADVANCE_CANCEL": "Stay here"
+    "AUTO_ADVANCE_CANCEL": "Stay here",
+    "STT_TOGGLE": "Voice commands",
+    "STT_LISTENING": "Listening...",
+    "STT_PAUSED_ECHO": "Paused",
+    "STT_UNSUPPORTED": "Not supported in this browser"
   },
   "aiImport": {
     "title": "Import a recipe with AI",
