@@ -1,6 +1,20 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import 'emoji-picker-element';
+import enPickerI18n from 'emoji-picker-element/i18n/en.js';
+import type { EmojiClickEvent, I18n } from 'emoji-picker-element/shared';
+import { LanguageService } from '../../../core/services/language.service';
 import { Category, CategoryDraft } from '../../../core/models/category.model';
 import { CategoryService } from '../../../core/services/category.service';
 
@@ -10,20 +24,12 @@ interface ParentOption {
   disabled: boolean;
 }
 
-const COLORS = [
-  '#f15a29',
-  '#e5484d',
-  '#e91e63',
-  '#9c27b0',
-  '#6a5acd',
-  '#2f80ed',
-  '#0fa3b1',
-  '#2bb673',
-  '#f2b705',
-  '#8a8a95',
-];
+type EmojiPickerElement = HTMLElement & { i18n?: I18n; locale?: string };
 
-const ICONS = ['🍝', '🥗', '🍰', '🍞', '🥘', '🌍', '🍲', '🥤', '🍳', '🧁', '🥩', '🍕'];
+/** Emoji search keywords are English-only (no Hebrew data in emoji-picker-element). */
+const PICKER_LOCALE = 'en';
+const PICKER_DATA_SOURCE =
+  'https://cdn.jsdelivr.net/npm/emoji-picker-element-data@^1/en/emojibase/data.json';
 
 @Component({
   selector: 'app-category-form',
@@ -31,6 +37,8 @@ const ICONS = ['🍝', '🥗', '🍰', '🍞', '🥘', '🌍', '🍲', '🥤', '
   imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './category-form.component.html',
   styleUrl: './category-form.component.scss',
+  // emoji-picker is a native custom element (emoji-picker-element), not an Angular component.
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class CategoryFormComponent implements OnInit {
   @Input() editing: Category | null = null;
@@ -43,15 +51,25 @@ export class CategoryFormComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private categoryService = inject(CategoryService);
+  private languageService = inject(LanguageService);
 
-  readonly colors = COLORS;
-  readonly icons = ICONS;
+  readonly pickerLocale = PICKER_LOCALE;
+  readonly pickerDataSource = PICKER_DATA_SOURCE;
+
+  showEmojiPicker = false;
   parentOptions: ParentOption[] = [];
+
+  @ViewChild('emojiPicker') set emojiPicker(ref: ElementRef<EmojiPickerElement> | undefined) {
+    if (!ref) return;
+    const picker = ref.nativeElement;
+    picker.locale = PICKER_LOCALE;
+    picker.i18n = this.pickerI18n();
+  }
 
   form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(60)]],
-    color: [COLORS[0], Validators.required],
-    icon: [ICONS[0], Validators.required],
+    color: ['#f15a29', Validators.required],
+    icon: ['🍝', Validators.required],
     parentCategory: [null as string | null],
   });
 
@@ -76,6 +94,18 @@ export class CategoryFormComponent implements OnInit {
 
   selectIcon(icon: string): void {
     this.form.controls.icon.setValue(icon);
+  }
+
+  toggleEmojiPicker(event: Event): void {
+    event.stopPropagation();
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+
+  onEmojiSelect(event: EmojiClickEvent): void {
+    if (event.detail.unicode) {
+      this.form.controls.icon.setValue(event.detail.unicode);
+    }
+    this.showEmojiPicker = false;
   }
 
   submit(): void {
@@ -122,5 +152,35 @@ export class CategoryFormComponent implements OnInit {
     };
     walk(null, 0);
     return options;
+  }
+
+  private pickerI18n(): I18n {
+    if (this.languageService.currentLang() === 'he') {
+      return {
+        ...enPickerI18n,
+        searchLabel: 'חיפוש (באנגלית, למשל pizza)',
+        categoriesLabel: 'קטגוריות',
+        favoritesLabel: 'מועדפים',
+        loadingMessage: 'טוען…',
+        networkErrorMessage: 'לא ניתן לטעון אימוג׳ים.',
+        regionLabel: 'בוחר אימוג׳ים',
+        searchResultsLabel: 'תוצאות חיפוש',
+        skinTonesLabel: 'גווני עור',
+        categories: {
+          ...enPickerI18n.categories,
+          custom: 'מותאם',
+          'smileys-emotion': 'סמיילים',
+          'people-body': 'אנשים',
+          'animals-nature': 'חיות וטבע',
+          'food-drink': 'אוכל ושתייה',
+          'travel-places': 'נסיעות ומקומות',
+          activities: 'פעילויות',
+          objects: 'חפצים',
+          symbols: 'סמלים',
+          flags: 'דגלים',
+        },
+      };
+    }
+    return enPickerI18n;
   }
 }
