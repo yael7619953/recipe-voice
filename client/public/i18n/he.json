@@ -155,7 +155,12 @@
     "AUTO_MODE_ON": "אוטומטי ✓",
     "AUTO_MODE_OFF": "ידני",
     "AUTO_ADVANCE_IN": "שלב הבא בעוד {{seconds}} ש׳",
-    "AUTO_ADVANCE_CANCEL": "הישאר כאן"
+    "AUTO_ADVANCE_CANCEL": "הישאר כאן",
+    "VOICE": "פקודות קוליות",
+    "VOICE_ON": "הפעל פקודות קוליות",
+    "VOICE_OFF": "כבה פקודות קוליות",
+    "LISTENING": "מקשיב...",
+    "VOICE_PAUSED": "מושהה בזמן הקראה"
   },
   "aiImport": {
     "title": "ייבוא מתכון עם AI",

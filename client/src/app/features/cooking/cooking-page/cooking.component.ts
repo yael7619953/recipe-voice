@@ -2,6 +2,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   OnDestroy,
   OnInit,
@@ -14,6 +15,7 @@ import { RecipeService } from '../../../core/services/recipe.service';
 import { Recipe } from '../../../core/models/recipe.model';
 import { CookingTimerAlarmService } from '../services/cooking-timer-alarm.service';
 import { CookingTtsService } from '../services/cooking-tts.service';
+import { CookingSttService, CookingVoiceCommand } from '../services/cooking-stt.service';
 
 type CookingPhase = 'ingredients' | 'instructions';
 
@@ -37,7 +39,7 @@ const AUTO_ADVANCE_SECONDS = 120;
   imports: [TranslatePipe, RouterLink],
   templateUrl: './cooking.component.html',
   styleUrl: './cooking.component.scss',
-  providers: [CookingTtsService, CookingTimerAlarmService],
+  providers: [CookingTtsService, CookingTimerAlarmService, CookingSttService],
   host: { '[attr.dir]': 'dir()' },
 })
 export class CookingComponent implements OnInit, OnDestroy {
@@ -47,6 +49,19 @@ export class CookingComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private tts = inject(CookingTtsService);
   private timerAlarm = inject(CookingTimerAlarmService);
+  private stt = inject(CookingSttService);
+
+  constructor() {
+    // Echo guard: mute the microphone while the app is reading a step aloud so
+    // the synthesized voice is never picked up as a command.
+    effect(() => {
+      if (this.isTtsSpeaking()) {
+        this.stt.pauseListening();
+      } else {
+        this.stt.resumeListening();
+      }
+    });
+  }
 
   readonly recipe = signal<Recipe | null>(null);
   readonly loading = signal(true);
@@ -74,6 +89,11 @@ export class CookingComponent implements OnInit, OnDestroy {
   readonly isTtsSpeaking = this.tts.active;
   readonly ttsPaused = this.tts.paused;
   readonly ttsSupported = this.tts.supported;
+
+  /** Voice-command (STT) state, exposed to the template for the mic control. */
+  readonly sttSupported = this.stt.supported;
+  readonly sttListening = this.stt.listening;
+  readonly voiceControlOn = signal(false);
 
   /** Remaining seconds for the current step's timer, or null when idle. */
   readonly timerRemaining = signal<number | null>(null);
@@ -126,6 +146,37 @@ export class CookingComponent implements OnInit, OnDestroy {
     this.clearTimer();
     this.timerAlarm.stop();
     this.tts.stop();
+    this.stt.stop();
+  }
+
+  /** Enable/disable hands-free voice commands (STT). */
+  toggleVoiceControl(): void {
+    if (this.voiceControlOn()) {
+      this.stt.stop();
+      this.voiceControlOn.set(false);
+      return;
+    }
+    this.stt.start((command) => this.handleVoiceCommand(command));
+    this.voiceControlOn.set(true);
+  }
+
+  /** Map a recognized voice command to the matching navigation/playback action. */
+  handleVoiceCommand(command: CookingVoiceCommand): void {
+    this.cancelAutoAdvance();
+    switch (command) {
+      case 'next':
+        this.next();
+        break;
+      case 'previous':
+        this.previous();
+        break;
+      case 'stop':
+        this.pauseSpeech();
+        break;
+      case 'continue':
+        this.resumeSpeech();
+        break;
+    }
   }
 
   toggleFullRecipe(): void {

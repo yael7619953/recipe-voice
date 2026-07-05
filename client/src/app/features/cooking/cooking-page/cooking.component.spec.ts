@@ -183,11 +183,11 @@ describe('CookingComponent', () => {
     it('should move to next and previous steps', () => {
       component.next();
       expect(component.currentStepIndex()).toBe(1);
-      expect(ttsSpeakSpy).toHaveBeenCalledWith('Add wet ingredients');
+      expect(ttsSpeakSpy).toHaveBeenCalledWith('Add wet ingredients', expect.any(Function));
 
       component.previous();
       expect(component.currentStepIndex()).toBe(0);
-      expect(ttsSpeakSpy).toHaveBeenCalledWith('Mix dry ingredients');
+      expect(ttsSpeakSpy).toHaveBeenCalledWith('Mix dry ingredients', expect.any(Function));
     });
 
     it('should not go past the first or last step', () => {
@@ -279,7 +279,7 @@ describe('CookingComponent', () => {
       component.resumeSpeech();
       component.stopSpeech();
 
-      expect(ttsSpeakSpy).toHaveBeenCalledWith('Mix dry ingredients');
+      expect(ttsSpeakSpy).toHaveBeenCalledWith('Mix dry ingredients', expect.any(Function));
       expect(ttsPauseSpy).toHaveBeenCalled();
       expect(ttsResumeSpy).toHaveBeenCalled();
       expect(ttsStopSpy).toHaveBeenCalled();

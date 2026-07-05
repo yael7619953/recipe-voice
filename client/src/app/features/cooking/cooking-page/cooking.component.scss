@@ -241,6 +241,44 @@
   }
 }
 
+.voice-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-block-end: 1.25rem;
+}
+
+.voice-btn {
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+
+  &--active {
+    border-color: #dc2626;
+    color: #dc2626;
+    background: #fee2e2;
+  }
+}
+
+.voice-status {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
 .step-nav {
   display: flex;
   justify-content: space-between;

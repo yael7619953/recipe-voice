@@ -220,6 +220,36 @@
 
 
 
+    @if (sttSupported) {
+
+      <div class="voice-controls" role="group" [attr.aria-label]="'COOKING.VOICE' | translate">
+
+        <button
+          type="button"
+          class="voice-btn"
+          [class.voice-btn--active]="voiceControlOn()"
+          [attr.aria-pressed]="voiceControlOn()"
+          [attr.aria-label]="(voiceControlOn() ? 'COOKING.VOICE_OFF' : 'COOKING.VOICE_ON') | translate"
+          (click)="toggleVoiceControl()"
+        >
+          {{ voiceControlOn() ? '🎙' : '🎤' }}
+          {{ (voiceControlOn() ? 'COOKING.VOICE_OFF' : 'COOKING.VOICE_ON') | translate }}
+        </button>
+
+        @if (voiceControlOn()) {
+
+          <span class="voice-status" role="status" aria-live="polite">
+            {{ (sttListening() ? 'COOKING.LISTENING' : 'COOKING.VOICE_PAUSED') | translate }}
+          </span>
+
+        }
+
+      </div>
+
+    }
+
+
+
     @if (isInstructionsPhase()) {
 
       <nav class="step-nav">
