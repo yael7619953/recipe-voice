@@ -1,0 +1,37 @@
+# Deployment skeleton (server API).
+# Fill in a provider below (Render or Railway) and add the matching repo secrets.
+# Safe by default: each deploy step is skipped unless its secret is configured,
+# so the workflow stays green until a provider is wired up.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-server:
+    name: Deploy server
+    runs-on: ubuntu-latest
+    env:
+      RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Option A — Render: create a Deploy Hook and store it as RENDER_DEPLOY_HOOK.
+      - name: Trigger Render deploy
+        if: ${{ env.RENDER_DEPLOY_HOOK != '' }}
+        run: curl -fsSL -X POST "$RENDER_DEPLOY_HOOK"
+
+      # Option B — Railway: store a project token as RAILWAY_TOKEN.
+      - name: Deploy to Railway
+        if: ${{ env.RAILWAY_TOKEN != '' }}
+        run: |
+          npm i -g @railway/cli
+          railway up --service server --detach
+
+      - name: No deploy target configured
+        if: ${{ env.RENDER_DEPLOY_HOOK == '' && env.RAILWAY_TOKEN == '' }}
+        run: echo "No deploy provider configured yet — add RENDER_DEPLOY_HOOK or RAILWAY_TOKEN to enable."

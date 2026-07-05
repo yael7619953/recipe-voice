@@ -526,6 +526,11 @@ The `data` object matches `RecipeDraft` (minus `categories`, `isFavorite`, `imag
 are not extracted from the file). Optional fields (`description`, `notes`) are `null` when
 absent in the source document.
 
+> **Unit note:** `timer.duration` in the AI response is in **minutes** (human-friendly for
+> the LLM). The client wizard (`ai-import-wizard.component.ts`) converts to **seconds**
+> (× 60) before saving via `POST /recipes`, so the stored recipe matches the `RecipeDraft`
+> contract where `duration` is in seconds.
+
 **Errors:**
 
 | Code | Condition |
@@ -655,3 +660,4 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-21 | Add section 6 `POST /ai/extract` — AI recipe extraction from PDF / image / Word `.docx`; add status codes 422, 502, 503 |
 | 2026-06-21 | AI import provider switched from OpenAI to Gemini (`GEMINI_API_KEY`); voice/STT still planned as Whisper |
 | 2026-06-21 | `GET /recipes?category=` — includes recipes in descendant subcategories of the filtered category |
+| 2026-07-02 | `POST /ai/extract` — clarify that `timer.duration` in the response is in minutes; wizard converts to seconds (× 60) before saving via `POST /recipes` |

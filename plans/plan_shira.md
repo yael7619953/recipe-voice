@@ -17,18 +17,16 @@
 
 ---
 
-
-
 ## האחריות שלי (Shira) במבט-על
 
 חלוקת העבודה בין Shira ל-Yael בנויה כך ששתינו נוגעות גם בשרת וגם בלקוח, וכל אחת מכסה פיצ'רים שונים — כדי שבסוף הפרויקט שתינו עברנו על כל החלקים. כל תלות בין-אישית מנוהלת דרך **לוח MERGE משותף** (ראו למטה) — אין תלות סמויה.
 
 
-| צד         | הפיצ'רים שלי                                                                                                                                                                                                     |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| צד         | הפיצ'רים שלי                                                                                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Server** | Auth ליבה (bcrypt + JWT, `auth.middleware`, `auth.routes` register/login) · Recipes CRUD · שכבת ה-AI/LLM בשרת — `**ai.service.js` בלבד** + controllers/routes של AI (Structured Output מ-PDF/תמונה/Word `.docx`) |
 | **Client** | מסכי Auth + `jwt.interceptor` + `auth.guard` · פיצ'ר Recipes (list/detail/form) · מצב בישול — `**cooking-stt.service` בלבד** (האזנה רציפה לפקודות STT) · i18n + RTL/LTR                                          |
-| **משותף**  | חצי מ-CI (יחד עם Yael)                                                                                                                                                                                           |
+| **משותף**  | חצי מ-CI (יחד עם Yael)                                                                                                                                                                                             |
 
 
 > **בעלות קבצים — חשוב:** אני עובדת על `ai.service.js` + `ai.controller.js`/`ai.routes.js` בלבד בשרת ל-AI Import. ב-`features/cooking/` אני בעלת `**cooking-stt.service` בלבד** — את `cooking.component`, `cooking-tts.service` והטיימרים מנהלת Yael.
@@ -36,8 +34,6 @@
 > **בת הזוג שלי — Yael** — אחראית על: תשתית שרת+לקוח, Google OAuth, Categories CRUD (שרת + UI), מצב בישול `**cooking.component` + TTS + טיימרים ויזואליים**, ו-AI Import wizard בלקוח.
 
 ---
-
-
 
 ## לוח MERGE משותף (זהה אצל שתינו)
 
@@ -51,51 +47,47 @@
 - מספרי ה-MERGE הם מזהים יציבים (לא בהכרח רציפים בזמן — `M10`/`M11` נעוצים ל-AI/Cooking).
 
 
-| #           | ענף                               | מי       | מתי (יום+שעה) | תנאי (ממתינה ל-)                        | מי ממתין לו                            |
-| ----------- | --------------------------------- | -------- | ------------- | --------------------------------------- | -------------------------------------- |
-| **M1**      | `feature/backend-infra`           | Yael     | יום 1, ~11:00 | אין — עצמאי                             | Shira (M2 deps, M10 upload), Yael (M4) |
-| **M2**      | `feature/auth-jwt-bcrypt`         | Shira    | יום 1, ~15:00 | M1 (deps)                               | Yael (M4, M5), Shira (M6)              |
-| **M3**      | `feature/auth-jwt-bcrypt`         | Shira    | יום 1, ~18:00 | אין — עצמאי                             | Yael (M8), Shira (M7)                  |
-| **M4**      | `feature/auth-google-oauth`       | Yael     | יום 1, ~18:30 | ⏸️ **M2** (auth.routes register/login)  | —                                      |
-| **M5**      | `feature/categories-crud`         | Yael     | יום 2, ~12:30 | M2 (auth.middleware)                    | Yael (M12)                             |
-| **M6**      | `feature/recipes-crud`            | Shira    | יום 2, ~12:30 | M2 (auth.middleware)                    | Shira (M9)                             |
-| **M7**      | `feature/auth-jwt-bcrypt`         | Shira    | יום 2, ~17:30 | M3 (auth.service לקוח)                  | —                                      |
-| **M8**      | `feature/auth-google-oauth`       | Yael     | יום 2, ~17:30 | M3 (auth.service לקוח)                  | —                                      |
-| **M9**      | `feature/recipes-crud`            | Shira    | יום 3, ~12:00 | M6 (Recipes API)                        | —                                      |
-| **M12**     | `feature/categories-crud`         | Yael     | יום 3, ~12:00 | M5 (Categories API)                     | —                                      |
-| **M10**     | `feature/ai-import`               | Shira    | יום 3, ~18:00 | M1 (upload.middleware)                  | Yael (M15)                             |
-| ~~**M13**~~ | `feature/ai-import`               | ~~Yael~~ | ~~יום 3~~     | **מבוטל** — אין הקלטה קולית ל-AI Import | —                                      |
-| **M11**     | `feature/step-timers` (+ cooking) | Yael     | יום 4, ~12:00 | אין — עצמאי                             | Shira (M14)                            |
-| **M14**     | `feature/cooking-voice-commands`  | Shira    | יום 4, ~15:00 | ⏸️ **M11** (cooking.component + TTS)    | —                                      |
-| **M15**     | `feature/ai-import`               | Yael     | יום 4, ~15:00 | M10 (AI server)                         | —                                      |
-| **M16**     | `feature/i18n-rtl`                | Shira    | יום 4, ~16:30 | אין — עצמאי                             | —                                      |
-| **M17**     | `feature/ci-cd`                   | Shira    | יום 4, ~18:00 | כל פיצ'רי הלקוח מוזגו                   | —                                      |
-| **M18**     | `feature/ci-cd`                   | Yael     | יום 4, ~18:00 | כל פיצ'רי השרת מוזגו                    | —                                      |
+| #       | ענף                               | מי    | מתי (יום+שעה) | תנאי (ממתינה ל-)                       | מי ממתין לו                            |
+| ------- | --------------------------------- | ----- | ------------- | -------------------------------------- | -------------------------------------- |
+| **M1**  | `feature/backend-infra`           | Yael  | יום 1, ~11:00 | אין — עצמאי                            | Shira (M2 deps, M10 upload), Yael (M4) |
+| **M2**  | `feature/auth-jwt-bcrypt`         | Shira | יום 1, ~15:00 | M1 (deps)                              | Yael (M4, M5), Shira (M6)              |
+| **M3**  | `feature/auth-jwt-bcrypt`         | Shira | יום 1, ~18:00 | אין — עצמאי                            | Yael (M8), Shira (M7)                  |
+| **M4**  | `feature/auth-google-oauth`       | Yael  | יום 1, ~18:30 | ⏸️ **M2** (auth.routes register/login) | —                                      |
+| **M5**  | `feature/categories-crud`         | Yael  | יום 2, ~12:30 | M2 (auth.middleware)                   | Yael (M12)                             |
+| **M6**  | `feature/recipes-crud`            | Shira | יום 2, ~12:30 | M2 (auth.middleware)                   | Shira (M9)                             |
+| **M7**  | `feature/auth-jwt-bcrypt`         | Shira | יום 2, ~17:30 | M3 (auth.service לקוח)                 | —                                      |
+| **M8**  | `feature/auth-google-oauth`       | Yael  | יום 2, ~17:30 | M3 (auth.service לקוח)                 | —                                      |
+| **M9**  | `feature/recipes-crud`            | Shira | יום 3, ~12:00 | M6 (Recipes API)                       | —                                      |
+| **M12** | `feature/categories-crud`         | Yael  | יום 3, ~12:00 | M5 (Categories API)                    | —                                      |
+| **M10** | `feature/ai-import`               | Shira | יום 3, ~18:00 | M1 (upload.middleware)                 | Yael (M15)                             |
+| ~~**M13**~~ | ~~`feature/ai-import`~~       | ~~Yael~~ | ~~יום 3~~ | **מבוטל** — אין הקלטה קולית ל-AI Import | —                                  |
+| **M11** | `feature/step-timers` (+ cooking) | Yael  | יום 4, ~12:00 | אין — עצמאי                            | Shira (M14)                            |
+| **M14** | `feature/cooking-voice-commands`  | Shira | יום 4, ~15:00 | ⏸️ **M11** (cooking.component + TTS)   | —                                      |
+| **M15** | `feature/ai-import`               | Yael  | יום 4, ~15:00 | M10 (AI server)                        | —                                      |
+| **M16** | `feature/i18n-rtl`                | Shira | יום 4, ~16:30 | אין — עצמאי                            | —                                      |
+| **M17** | `feature/ci-cd`                   | Shira | יום 4, ~18:00 | כל פיצ'רי הלקוח מוזגו                  | —                                      |
+| **M18** | `feature/ci-cd`                   | Yael  | יום 4, ~18:00 | כל פיצ'רי השרת מוזגו                   | —                                      |
 
 
-**תלויות באותו יום (חוסמות — חייבות** `⏸️ ממתינה ל-MERGE`**):**
+**תלויות באותו יום (חוסמות — חייבות `⏸️ ממתינה ל-MERGE`):**
 
 - M4 (Yael) ⏸️ ממתינה ל-M2 (Shira) ~15:00 — חלק ה-OAuth ב-`auth.routes` נכתב מעל register/login של Shira.
 - M14 (Shira) ⏸️ ממתינה ל-M11 (Yael) ~12:00 — `cooking-stt.service` נכנס לתוך `cooking.component` של Yael.
 
 כל שאר התלויות הן בין-יומיות (ה-MERGE כבר מוזג ביום קודם) ולכן **אינן חוסמות** ומסומנות "כבר זמין".
 
-> **בעלות הענף המשותף** `feature/ai-import`**:** שני מיזוגים — M10 (Shira) ו-M15 (Yael). חלוקת קבצים: **אני בעלת** `ai.service.js` **/** `ai.controller.js` **/** `ai.routes.js`; **Yael בעלת ה-wizard בלקוח בלבד**. אין `voice.`* בענף זה.
+> **בעלות הענף המשותף `feature/ai-import`:** שני מיזוגים — M10 (Shira) ו-M15 (Yael). חלוקת קבצים: **אני בעלת `ai.service.js` / `ai.controller.js` / `ai.routes.js`**; **Yael בעלת ה-wizard בלקוח בלבד**. אין `voice.*` בענף זה.
 
 ---
-
-
 
 ## נקודות תיאום קבועות (כל יום)
 
 - **בוקר (15 דק')**: סנכרון קצר — מי נוגע באילו קבצים היום + מה נמזג מאתמול (לפי לוח MERGE), כדי למנוע קונפליקטים ב-`app.js` / `app.routes.ts`.
 - **כלל זהב**: לא נוגעות ישירות ב-`server/app.js` ו-`client/src/app/app.routes.ts` — כל פיצ'ר נרשם דרך `routes/index.js` (שרת) ו-`loadChildren` נפרד (לקוח).
-- **בעלות** `auth.routes.js`: אני בעלת register/login (M2). Yael מוסיפה את חלק ה-OAuth **רק אחרי MERGE M2** (M4) — עריכה עוקבת, לא מקבילה.
+- **בעלות `auth.routes.js`**: אני בעלת register/login (M2). Yael מוסיפה את חלק ה-OAuth **רק אחרי MERGE M2** (M4) — עריכה עוקבת, לא מקבילה.
 - **סוף יום**: push לענף הפיצ'ר + פתיחת PR ל-`develop` כשהחלק עצמאי ועובר CI; עדכון שעת ה-MERGE בלוח המשותף.
 
 ---
-
-
 
 ## יום 1 — Auth בשרת (ליבה) + ליבת Auth בלקוח
 
@@ -108,8 +100,6 @@
 - **MERGE שלי:** M2, ~15:00
 - **⚠️ סיכון לו"ז הדוק:** בין M1 (~~11:00) ל-M2 (~~15:00) יש ~4 שעות לכל ליבת ה-Auth בשרת (jwt + auth.service + controller + routes + middleware). לוודא ש-Yael מסיימת את M1 מוקדם ככל האפשר; אם M1 מתעכב — לדחות את M2 ולעדכן בלוח.
 - תוכן: `server/utils/jwt.js` (sign/verify) · `server/services/auth.service.js` (register עם bcrypt + login + הנפקת JWT) · `server/controllers/auth.controller.js` · `server/routes/auth.routes.js` (**register/login בלבד**, דרך `routes/index.js`) · `server/middleware/auth.middleware.js` (אימות JWT + `req.userId`).
-
-
 
 ### משימה B — Auth ליבה בלקוח
 
@@ -124,21 +114,15 @@
 
 ---
 
-
-
 ## הוראת עבודה עם ה-AI
 
 כל יום מחולק לשלבים ממוספרים. **אחרי כל שלב — בדיקה ואישור לפני שממשיכים לשלב הבא.** אם יש הערה/תיקון — מעדכנים ורק אז עוברים הלאה.
 
 ---
 
-
-
 ## יום 2 — Recipes API בשרת + מסכי Auth (login/register) בלקוח
 
 > לפי הכלל: מסכי login/register הם יום 2 ו**אינם** מאוחדים עם פיצ'ר Recipes (שעבר ליום 3). שני ענפים נפרדים, שני MERGE נפרדים.
-
-
 
 ### משימה A — Recipes API (שרת)
 
@@ -146,8 +130,6 @@
 - **⏸️ ממתינה ל:** M2 (`auth.middleware`, מוזג יום 1) — כבר זמין, לא חוסם.
 - **MERGE שלי:** M6, ~12:30
 - תוכן: `server/services/recipe.service.js` (CRUD מלא, סינון לפי `userId`, `instructions[].timer{duration, hasTimer}`) · `recipe.controller.js` · `recipe.routes.js` (מוגן ב-`auth.middleware`) · בדיקת בעלות בכל פעולה. `category` ref קיים במודל — לא תלוי בלוגיקת העץ של Yael.
-
-
 
 ### משימה B — מסכי Auth (login/register) בלקוח
 
@@ -160,11 +142,7 @@
 
 ---
 
-
-
 ## יום 3 — Recipes UI בלקוח + שכבת AI בשרת
-
-
 
 ### משימה A — Recipes UI (לקוח)
 
@@ -172,8 +150,6 @@
 - **⏸️ ממתינה ל:** M6 (Recipes API, מוזג יום 2) — כבר זמין.
 - **MERGE שלי:** M9, ~12:00
 - תוכן: `core/services/recipe.service.ts` + `recipe.model.ts` · `features/recipes/` — list / detail / form (כולל עריכת `instructions` עם טיימר) · `features/recipes/recipes.routes.ts` + lazy ב-`app.routes.ts`.
-
-
 
 ### משימה B — שכבת AI בשרת (החלק הקשה ביותר שלי)
 
@@ -188,11 +164,7 @@
 
 ---
 
-
-
 ## יום 4 — מצב בישול (STT) + i18n/RTL + CI
-
-
 
 ### משימה A — מצב בישול: `cooking-stt.service`
 
@@ -201,16 +173,12 @@
 - **MERGE שלי:** M14, ~15:00
 - תוכן: `features/cooking/cooking-stt.service.ts` **בלבד** — האזנה רציפה (Web Speech API) לפקודות: "עצור"/"המשך"/"קודם"/"הבא" + stop/continue/previous/next · אינדיקטור מיקרופון + כפתור toggle · ניהול echo: השהיית ההאזנה בזמן TTS פעיל (לפי דגל ה-state שמגדירה Yael ב-`cooking.component`). אני **לא** בעלת `cooking.component`.
 
-
-
 ### משימה B — i18n + RTL/LTR
 
 - **ענף Git:** `feature/i18n-rtl`
 - **⏸️ ממתינה ל:** אין — עצמאי (מיזוג מחרוזות עם Yael בתיאום, לא חוסם).
 - **MERGE שלי:** M16, ~16:30
 - תוכן: `assets/i18n/he.json` + `en.json` (מחרוזות שלי) · החלפת שפה דינמית: עדכון `document.documentElement.dir` (`rtl`/`ltr`) ו-`lang` · סגנון לוגי (`margin-inline`, `text-align: start`) במקומות שנגעתי בהם.
-
-
 
 ### משימה C — CI (job client)
 
@@ -227,11 +195,7 @@
 
 ---
 
-
-
 ## פיצ'ר נוסף — Recipe Search & Categories Form
-
-
 
 ### משימה A — חיפוש וסינון מתכונים (recipes-home)
 
@@ -249,8 +213,6 @@
   - `client/src/app/features/recipes/recipes-home/recipes-home.component.html` — שורת `.filter-bar` עם `<input>`, `<select>`, כפתור ניקוי
   - `client/src/app/features/recipes/recipes-home/recipes-home.component.scss` — עיצוב `.filter-bar`, `.filter-search`, `.filter-category`, `.btn-clear`
 
-
-
 ### משימה B — בחירת קטגוריות בטופס מתכון (recipe-form)
 
 - **ענף Git:** `feature/recipe-search-filter`
@@ -266,8 +228,6 @@
   - `client/src/app/features/recipes/recipe-form/recipe-form.component.html` — סקשן `<!-- Categories -->` עם chips + טופס מיני inline
   - `client/src/app/features/recipes/recipe-form/recipe-form.component.scss` — עיצוב `.category-chips`, `.category-chip`, `.category-chip--selected`, `.new-category-row`, `.new-category-input`
 
-
-
 ### i18n
 
 - **קבצים:** `client/public/i18n/en.json` + `he.json`
@@ -275,24 +235,17 @@
   - `RECIPES.FILTER.SEARCH_PH`, `RECIPES.FILTER.CATEGORY`, `RECIPES.FILTER.ALL`, `RECIPES.FILTER.CLEAR`
   - `RECIPES.FORM.FIELD.CATEGORIES`, `RECIPES.FORM.FIELD.ADD_CATEGORY`, `RECIPES.FORM.FIELD.CATEGORY_NAME_PH`, `RECIPES.FORM.FIELD.SAVE_CATEGORY`
 
-
-
 ### לוח MERGE (עדכון)
 
-
-| #       | ענף                            | מי    | תנאי                  | מי ממתין לו |
-| ------- | ------------------------------ | ----- | --------------------- | ----------- |
-| **M19** | `feature/recipe-search-filter` | Shira | M9 + M12 (כבר זמינים) | —           |
-
+| #       | ענף                          | מי    | תנאי                          | מי ממתין לו |
+| ------- | ---------------------------- | ----- | ----------------------------- | ----------- |
+| **M19** | `feature/recipe-search-filter` | Shira | M9 + M12 (כבר זמינים) | — |
 
 ---
 
-
-
 ## סיכום תלויות שחשוב לי לזכור
 
-1. **M2 (**`auth.middleware`**, יום 1)** — קריטי מוקדם; גם Recipes שלי (M6) וגם Categories של Yael (M5) בנויות עליו, ו-Yael ממתינה לו ל-OAuth (M4). לו"ז הדוק מול M1 — לסיים מהר.
+1. **M2 (`auth.middleware`, יום 1)** — קריטי מוקדם; גם Recipes שלי (M6) וגם Categories של Yael (M5) בנויות עליו, ו-Yael ממתינה לו ל-OAuth (M4). לו"ז הדוק מול M1 — לסיים מהר.
 2. **M1 (upload, של Yael, יום 1)** — אני ממתינה לו ל-Auth שרת (deps) ול-AI server (M10).
-3. **חוזה** `POST /api/ai/extract` **(יום 3)** — ה-wizard של Yael (M15) שולח קובץ (PDF/תמונה/Word) ומקבל JSON; אין `voice.service` ל-AI Import.
-4. **M11 (**`cooking.component` **של Yael, יום 4)** — אני ממתינה לו לפני `cooking-stt.service` (M14); להגדיר מראש את דגל "TTS מדבר" כדי למנוע echo.
-
+3. **חוזה `POST /api/ai/extract` (יום 3)** — ה-wizard של Yael (M15) שולח קובץ (PDF/תמונה/Word) ומקבל JSON; אין `voice.service` ל-AI Import.
+4. **M11 (`cooking.component` של Yael, יום 4)** — אני ממתינה לו לפני `cooking-stt.service` (M14); להגדיר מראש את דגל "TTS מדבר" כדי למנוע echo.

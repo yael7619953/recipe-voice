@@ -2,6 +2,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   OnDestroy,
   OnInit,
@@ -76,6 +77,11 @@ export class CookingComponent implements OnInit, OnDestroy {
   readonly isTtsSpeaking = this.tts.active;
   readonly ttsPaused = this.tts.paused;
   readonly ttsSupported = this.tts.supported;
+
+  /** Voice-command (STT) state, exposed to the template for the mic control. */
+  readonly sttSupported = this.stt.supported;
+  readonly sttListening = this.stt.listening;
+  readonly voiceControlOn = signal(false);
 
   /** Remaining seconds for the current step's timer, or null when idle. */
   readonly timerRemaining = signal<number | null>(null);
