@@ -24,8 +24,8 @@
       "editTitle": "Edit Category",
       "name": "Name",
       "namePlaceholder": "e.g. Desserts",
-      "color": "Color",
-      "icon": "Icon",
+      "color": "Choose a category color",
+      "icon": "Choose a category icon",
       "parent": "Parent category",
       "noParent": "None (top-level)",
       "save": "Save",
@@ -156,11 +156,10 @@
     "AUTO_MODE_OFF": "Manual",
     "AUTO_ADVANCE_IN": "Next step in {{seconds}}s",
     "AUTO_ADVANCE_CANCEL": "Stay here",
-    "VOICE": "Voice commands",
-    "VOICE_ON": "Enable voice commands",
-    "VOICE_OFF": "Disable voice commands",
-    "LISTENING": "Listening...",
-    "VOICE_PAUSED": "Paused while reading"
+    "STT_TOGGLE": "Voice commands",
+    "STT_LISTENING": "Listening...",
+    "STT_PAUSED_ECHO": "Paused",
+    "STT_UNSUPPORTED": "Not supported in this browser"
   },
   "aiImport": {
     "title": "Import a recipe with AI",

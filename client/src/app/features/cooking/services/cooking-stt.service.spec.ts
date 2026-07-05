@@ -1,9 +1,10 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { TranslateLoader, provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { TranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { vi } from 'vitest';
 
-import { CookingSttService, CookingVoiceCommand } from './cooking-stt.service';
+import { CookingSttService } from './cooking-stt.service';
 
 class FakeTranslateLoader extends TranslateLoader {
   getTranslation() {
@@ -11,14 +12,14 @@ class FakeTranslateLoader extends TranslateLoader {
   }
 }
 
-/** Controllable stand-in for a Web Speech `SpeechRecognition` instance. */
+/** In-memory stand-in for a Web Speech `SpeechRecognition` instance. */
 class MockRecognition {
-  lang = '';
   continuous = false;
   interimResults = false;
+  lang = '';
   onresult: ((event: unknown) => void) | null = null;
   onend: (() => void) | null = null;
-  onerror: ((event: { error: string }) => void) | null = null;
+  onerror: ((event: unknown) => void) | null = null;
 
   start = vi.fn();
   stop = vi.fn();
@@ -30,122 +31,262 @@ class MockRecognition {
     MockRecognition.instances.push(this);
   }
 
-  /** Simulate the engine recognizing a phrase. */
-  emit(transcript: string): void {
-    this.onresult?.({
-      resultIndex: 0,
-      results: [[{ transcript }]],
-    });
+  /** Simulate the recognizer emitting a final transcript. */
+  emitResult(transcript: string): void {
+    this.onresult?.({ results: [[{ transcript }]] });
   }
 }
 
-function utteranceFor(command: CookingVoiceCommand, lang: 'he' | 'en'): string {
-  const phrases: Record<'he' | 'en', Record<CookingVoiceCommand, string>> = {
-    he: { next: 'הבא', previous: 'הקודם', stop: 'עצור', continue: 'המשך' },
-    en: { next: 'next', previous: 'previous', stop: 'stop', continue: 'continue' },
-  };
-  return phrases[lang][command];
+function flushEffects(): void {
+  TestBed.tick();
 }
 
 describe('CookingSttService', () => {
   let service: CookingSttService;
-  let translate: TranslateService;
 
-  beforeEach(() => {
+  function setup(withApi = true) {
     MockRecognition.instances = [];
-    vi.stubGlobal('SpeechRecognition', MockRecognition);
+    if (withApi) {
+      vi.stubGlobal('SpeechRecognition', MockRecognition);
+    }
 
     TestBed.configureTestingModule({
       providers: [
         CookingSttService,
-        provideTranslateService({ loader: { provide: TranslateLoader, useClass: FakeTranslateLoader } }),
+        provideTranslateService({
+          loader: { provide: TranslateLoader, useClass: FakeTranslateLoader },
+        }),
       ],
     });
 
     service = TestBed.inject(CookingSttService);
-    translate = TestBed.inject(TranslateService);
-    translate.use('he');
-  });
+  }
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
-  it('should create and report supported', () => {
-    expect(service).toBeTruthy();
-    expect(service.supported).toBe(true);
+  describe('support detection', () => {
+    it('should report supported when the API exists', () => {
+      setup(true);
+      expect(service).toBeTruthy();
+      expect(service.supported).toBe(true);
+    });
+
+    it('should report unsupported when no SpeechRecognition API', () => {
+      setup(false);
+      expect(service.supported).toBe(false);
+      service.enable();
+      expect(service.enabled()).toBe(false);
+    });
   });
 
-  it('should start listening and expose the listening signal', () => {
-    service.start(() => {});
+  describe('parseCommand', () => {
+    beforeEach(() => setup(true));
 
-    expect(service.isEnabled()).toBe(true);
-    expect(service.listening()).toBe(true);
-    expect(MockRecognition.instances).toHaveLength(1);
-    expect(MockRecognition.instances[0].start).toHaveBeenCalled();
+    it.each([
+      ['עצור', 'stop'],
+      ['stop', 'stop'],
+      ['המשך', 'continue'],
+      ['continue', 'continue'],
+      ['קודם', 'previous'],
+      ['back', 'previous'],
+      ['הבא', 'next'],
+      ['next', 'next'],
+    ])('should parse "%s" as %s', (input, expected) => {
+      expect(service.parseCommand(input)).toBe(expected);
+    });
+
+    it('should ignore punctuation and casing', () => {
+      expect(service.parseCommand('  STOP! ')).toBe('stop');
+      expect(service.parseCommand('עצור,')).toBe('stop');
+    });
+
+    it('should find the command inside a longer utterance', () => {
+      expect(service.parseCommand('ok next please')).toBe('next');
+    });
+
+    it('should prefer the multi-word phrase over a single-word alias', () => {
+      expect(service.parseCommand('המשך הלאה')).toBe('next');
+    });
+
+    it('should return null for unknown text', () => {
+      expect(service.parseCommand('make me a sandwich')).toBeNull();
+      expect(service.parseCommand('')).toBeNull();
+    });
   });
 
-  it('should map Hebrew phrases to commands', () => {
-    const commands: CookingVoiceCommand[] = [];
-    service.start((c) => commands.push(c));
-    const rec = MockRecognition.instances[0];
+  describe('enable / toggle', () => {
+    beforeEach(() => setup(true));
 
-    rec.emit(utteranceFor('next', 'he'));
-    rec.emit(utteranceFor('previous', 'he'));
-    rec.emit(utteranceFor('stop', 'he'));
+    it('should start listening when enabled', () => {
+      service.enable();
+      expect(service.enabled()).toBe(true);
+      expect(service.listening()).toBe(true);
+      expect(MockRecognition.instances).toHaveLength(1);
+      expect(MockRecognition.instances[0].start).toHaveBeenCalled();
+      expect(MockRecognition.instances[0].continuous).toBe(true);
+      expect(MockRecognition.instances[0].interimResults).toBe(false);
+    });
 
-    expect(commands).toEqual(['next', 'previous', 'stop']);
+    it('should toggle on and off', () => {
+      expect(service.toggle()).toBe(true);
+      expect(service.listening()).toBe(true);
+
+      expect(service.toggle()).toBe(false);
+      expect(service.enabled()).toBe(false);
+      expect(service.listening()).toBe(false);
+      expect(MockRecognition.instances[0].abort).toHaveBeenCalled();
+    });
   });
 
-  it('should map English phrases when language is en', () => {
-    translate.use('en');
-    const commands: CookingVoiceCommand[] = [];
-    service.start((c) => commands.push(c));
+  describe('command dispatch', () => {
+    let handlers: {
+      isTtsActive: ReturnType<typeof signal<boolean>>;
+      onStop: ReturnType<typeof vi.fn<() => void>>;
+      onContinue: ReturnType<typeof vi.fn<() => void>>;
+      onPrevious: ReturnType<typeof vi.fn<() => void>>;
+      onNext: ReturnType<typeof vi.fn<() => void>>;
+    };
 
-    MockRecognition.instances[0].emit('please go to the next step');
+    beforeEach(() => {
+      setup(true);
+      handlers = {
+        isTtsActive: signal(false),
+        onStop: vi.fn<() => void>(),
+        onContinue: vi.fn<() => void>(),
+        onPrevious: vi.fn<() => void>(),
+        onNext: vi.fn<() => void>(),
+      };
+      service.attach(handlers);
+      flushEffects();
+      service.enable();
+    });
 
-    expect(commands).toEqual(['next']);
+    it('should invoke the matching callback for a recognized command', () => {
+      const rec = MockRecognition.instances[0];
+      rec.emitResult('הבא');
+      expect(handlers.onNext).toHaveBeenCalledTimes(1);
+
+      rec.emitResult('stop');
+      expect(handlers.onStop).toHaveBeenCalledTimes(1);
+
+      rec.emitResult('המשך');
+      expect(handlers.onContinue).toHaveBeenCalledTimes(1);
+
+      rec.emitResult('previous');
+      expect(handlers.onPrevious).toHaveBeenCalledTimes(1);
+    });
+
+    it('should ignore unrecognized transcripts', () => {
+      MockRecognition.instances[0].emitResult('hello world');
+      expect(handlers.onStop).not.toHaveBeenCalled();
+      expect(handlers.onNext).not.toHaveBeenCalled();
+    });
   });
 
-  it('should ignore unrecognized phrases', () => {
-    const handler = vi.fn();
-    service.start(handler);
+  describe('continuous restart', () => {
+    beforeEach(() => setup(true));
 
-    MockRecognition.instances[0].emit('something unrelated');
+    it('should restart recognition after onend while enabled', () => {
+      vi.useFakeTimers();
+      service.enable();
+      expect(MockRecognition.instances).toHaveLength(1);
 
-    expect(handler).not.toHaveBeenCalled();
+      MockRecognition.instances[0].onend?.();
+      expect(service.listening()).toBe(false);
+
+      vi.runOnlyPendingTimers();
+      expect(MockRecognition.instances).toHaveLength(2);
+      expect(service.listening()).toBe(true);
+    });
+
+    it('should not restart after being disabled', () => {
+      vi.useFakeTimers();
+      service.enable();
+      service.disable();
+
+      MockRecognition.instances[0].onend?.();
+      vi.runOnlyPendingTimers();
+
+      expect(MockRecognition.instances).toHaveLength(1);
+    });
   });
 
-  it('should mute and resume for the echo guard', () => {
-    service.start(() => {});
-    const first = MockRecognition.instances[0];
+  describe('error handling', () => {
+    beforeEach(() => setup(true));
 
-    service.pauseListening();
-    expect(first.abort).toHaveBeenCalled();
-    expect(service.listening()).toBe(false);
-    expect(service.isEnabled()).toBe(true);
+    it('should disable on a permission error', () => {
+      service.enable();
+      MockRecognition.instances[0].onerror?.({ error: 'not-allowed' });
 
-    service.resumeListening();
-    expect(service.listening()).toBe(true);
-    expect(MockRecognition.instances).toHaveLength(2);
+      expect(service.enabled()).toBe(false);
+      expect(service.listening()).toBe(false);
+    });
+
+    it('should retry after a transient error', () => {
+      vi.useFakeTimers();
+      service.enable();
+      MockRecognition.instances[0].onerror?.({ error: 'network' });
+
+      vi.runOnlyPendingTimers();
+      expect(MockRecognition.instances).toHaveLength(2);
+    });
   });
 
-  it('should not resume when voice control was fully stopped', () => {
-    service.start(() => {});
-    service.stop();
-    expect(service.isEnabled()).toBe(false);
+  describe('echo guard', () => {
+    it('should mute the mic while TTS is active and resume after', () => {
+      setup(true);
+      vi.useFakeTimers();
+      const isTtsActive = signal(false);
+      service.attach({
+        isTtsActive,
+        onStop: vi.fn<() => void>(),
+        onContinue: vi.fn<() => void>(),
+        onPrevious: vi.fn<() => void>(),
+        onNext: vi.fn<() => void>(),
+      });
+      flushEffects();
+      service.enable();
+      expect(service.listening()).toBe(true);
 
-    service.resumeListening();
-    expect(service.listening()).toBe(false);
+      isTtsActive.set(true);
+      flushEffects();
+      expect(service.pausedForEcho()).toBe(true);
+      expect(service.listening()).toBe(false);
+      expect(MockRecognition.instances[0].abort).toHaveBeenCalled();
+
+      isTtsActive.set(false);
+      flushEffects();
+      expect(service.pausedForEcho()).toBe(false);
+
+      vi.runOnlyPendingTimers();
+      expect(MockRecognition.instances.length).toBeGreaterThanOrEqual(2);
+      expect(service.listening()).toBe(true);
+    });
   });
 
-  it('should relaunch on auto-end while enabled', () => {
-    service.start(() => {});
-    const first = MockRecognition.instances[0];
+  describe('indicator', () => {
+    beforeEach(() => setup(true));
 
-    first.onend?.();
+    it('should reflect off / active / paused-echo states', () => {
+      expect(service.indicator()).toBe('off');
+      service.enable();
+      expect(service.indicator()).toBe('active');
+    });
+  });
 
-    expect(MockRecognition.instances).toHaveLength(2);
-    expect(service.listening()).toBe(true);
+  describe('destroy', () => {
+    it('should tear down recognition and reset state', () => {
+      setup(true);
+      service.enable();
+      const rec = MockRecognition.instances[0];
+      service.destroy();
+
+      expect(rec.abort).toHaveBeenCalled();
+      expect(service.enabled()).toBe(false);
+      expect(service.listening()).toBe(false);
+    });
   });
 });

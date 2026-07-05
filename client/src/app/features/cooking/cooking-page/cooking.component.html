@@ -218,6 +218,33 @@
 
     }
 
+    @if (stt.supported) {
+
+      <div class="stt-controls">
+
+        <button
+          type="button"
+          class="stt-btn"
+          [class.stt-btn--active]="stt.enabled()"
+          [class.stt-btn--echo]="stt.pausedForEcho()"
+          (click)="stt.toggle()"
+          [attr.aria-label]="'COOKING.STT_TOGGLE' | translate"
+          [attr.aria-pressed]="stt.enabled()"
+        >
+          🎤
+
+          @if (stt.listening()) {
+            <span class="stt-btn__status">{{ 'COOKING.STT_LISTENING' | translate }}</span>
+          } @else if (stt.pausedForEcho()) {
+            <span class="stt-btn__status">{{ 'COOKING.STT_PAUSED_ECHO' | translate }}</span>
+          }
+
+        </button>
+
+      </div>
+
+    }
+
 
 
     @if (sttSupported) {

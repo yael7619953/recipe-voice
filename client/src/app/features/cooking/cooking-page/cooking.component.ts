@@ -15,7 +15,7 @@ import { RecipeService } from '../../../core/services/recipe.service';
 import { Recipe } from '../../../core/models/recipe.model';
 import { CookingTimerAlarmService } from '../services/cooking-timer-alarm.service';
 import { CookingTtsService } from '../services/cooking-tts.service';
-import { CookingSttService, CookingVoiceCommand } from '../services/cooking-stt.service';
+import { CookingSttService } from '../services/cooking-stt.service';
 
 type CookingPhase = 'ingredients' | 'instructions';
 
@@ -49,19 +49,7 @@ export class CookingComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private tts = inject(CookingTtsService);
   private timerAlarm = inject(CookingTimerAlarmService);
-  private stt = inject(CookingSttService);
-
-  constructor() {
-    // Echo guard: mute the microphone while the app is reading a step aloud so
-    // the synthesized voice is never picked up as a command.
-    effect(() => {
-      if (this.isTtsSpeaking()) {
-        this.stt.pauseListening();
-      } else {
-        this.stt.resumeListening();
-      }
-    });
-  }
+  readonly stt = inject(CookingSttService);
 
   readonly recipe = signal<Recipe | null>(null);
   readonly loading = signal(true);
@@ -133,6 +121,13 @@ export class CookingComponent implements OnInit, OnDestroy {
           this.recipe.set(r);
           this.loading.set(false);
           this.startCookingSession();
+          this.stt.attach({
+            isTtsActive: this.isTtsSpeaking,
+            onStop:     () => this.stopSpeech(),
+            onContinue: () => this.resumeSpeech(),
+            onPrevious: () => this.previous(),
+            onNext:     () => { this.cancelAutoAdvance(); this.next(); },
+          });
         },
         error: () => {
           this.errorKey.set('RECIPES.ERROR.NOT_FOUND');
@@ -146,37 +141,7 @@ export class CookingComponent implements OnInit, OnDestroy {
     this.clearTimer();
     this.timerAlarm.stop();
     this.tts.stop();
-    this.stt.stop();
-  }
-
-  /** Enable/disable hands-free voice commands (STT). */
-  toggleVoiceControl(): void {
-    if (this.voiceControlOn()) {
-      this.stt.stop();
-      this.voiceControlOn.set(false);
-      return;
-    }
-    this.stt.start((command) => this.handleVoiceCommand(command));
-    this.voiceControlOn.set(true);
-  }
-
-  /** Map a recognized voice command to the matching navigation/playback action. */
-  handleVoiceCommand(command: CookingVoiceCommand): void {
-    this.cancelAutoAdvance();
-    switch (command) {
-      case 'next':
-        this.next();
-        break;
-      case 'previous':
-        this.previous();
-        break;
-      case 'stop':
-        this.pauseSpeech();
-        break;
-      case 'continue':
-        this.resumeSpeech();
-        break;
-    }
+    this.stt.destroy();
   }
 
   toggleFullRecipe(): void {

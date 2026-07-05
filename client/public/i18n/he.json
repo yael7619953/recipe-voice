@@ -24,8 +24,8 @@
       "editTitle": "עריכת קטגוריה",
       "name": "שם",
       "namePlaceholder": "לדוגמה: קינוחים",
-      "color": "צבע",
-      "icon": "אייקון",
+      "color": "בחר צבע לקטגוריה",
+      "icon": "בחר אייקון לקטגוריה",
       "parent": "קטגוריית אב",
       "noParent": "ללא (קטגוריה ראשית)",
       "save": "שמירה",
@@ -156,11 +156,10 @@
     "AUTO_MODE_OFF": "ידני",
     "AUTO_ADVANCE_IN": "שלב הבא בעוד {{seconds}} ש׳",
     "AUTO_ADVANCE_CANCEL": "הישאר כאן",
-    "VOICE": "פקודות קוליות",
-    "VOICE_ON": "הפעל פקודות קוליות",
-    "VOICE_OFF": "כבה פקודות קוליות",
-    "LISTENING": "מקשיב...",
-    "VOICE_PAUSED": "מושהה בזמן הקראה"
+    "STT_TOGGLE": "פקודות קוליות",
+    "STT_LISTENING": "מאזין...",
+    "STT_PAUSED_ECHO": "בהשהיה",
+    "STT_UNSUPPORTED": "לא נתמך בדפדפן זה"
   },
   "aiImport": {
     "title": "ייבוא מתכון עם AI",

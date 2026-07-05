@@ -1,231 +1,394 @@
-import { inject, Injectable, signal } from '@angular/core';
+import {
+  computed,
+  effect,
+  EffectRef,
+  inject,
+  Injectable,
+  Injector,
+  Signal,
+  signal,
+} from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-/** Semantic voice commands the cooking screen understands. */
-export type CookingVoiceCommand = 'next' | 'previous' | 'stop' | 'continue';
+/** Voice commands understood while cooking. */
+export type CookingVoiceCommand = 'stop' | 'continue' | 'previous' | 'next';
 
-/** BCP-47 recognition locale per interface language. */
+/** Host hooks the STT layer drives when a command is recognized. */
+export interface CookingSttHandlers {
+  /** Signal that is true while the app is reading a step aloud (echo source). */
+  isTtsActive: Signal<boolean>;
+  onStop: () => void;
+  onContinue: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}
+
+/** BCP-47 recognition locale per interface language (mirrors the TTS service). */
 const LANG_MAP: Record<string, string> = {
   he: 'he-IL',
   en: 'en-US',
 };
 
 /**
- * Spoken phrases mapped to a command, per language. Kept lowercase; matching is
- * substring-based so natural phrasing ("go to the next step") still resolves.
+ * Command aliases keyed by command. Matched against the raw STT transcript, so
+ * both Hebrew and English spellings are listed explicitly — the recognizer
+ * returns free text, not i18n keys. Multi-word phrases are matched before
+ * single words so e.g. "המשך הלאה" resolves to `next` rather than `continue`.
  */
-const PHRASES: Record<string, Record<CookingVoiceCommand, string[]>> = {
-  he: {
-    next: ['הבא', 'קדימה', 'המשך שלב', 'שלב הבא'],
-    previous: ['הקודם', 'אחורה', 'שלב קודם', 'חזור'],
-    stop: ['עצור', 'עצירה', 'השהה', 'רגע'],
-    continue: ['המשך', 'תמשיך', 'הפעל'],
-  },
-  en: {
-    next: ['next', 'forward', 'next step'],
-    previous: ['previous', 'back', 'go back', 'last step'],
-    stop: ['stop', 'pause', 'wait', 'hold on'],
-    continue: ['continue', 'resume', 'go on', 'play'],
-  },
-};
+const COMMAND_ALIASES: ReadonlyArray<readonly [CookingVoiceCommand, readonly string[]]> = [
+  ['next', ['המשך הלאה', 'go on', 'הבא', 'הלאה', 'קדימה', 'next', 'forward']],
+  ['previous', ['הקודם', 'קודם', 'אחורה', 'חזור', 'previous', 'back', 'prev']],
+  ['stop', ['עצור', 'עצרי', 'עצירה', 'די', 'stop', 'pause', 'halt']],
+  ['continue', ['המשך', 'תמשיך', 'המשיכי', 'continue', 'resume']],
+];
+
+/** Delay before restarting recognition after the app stops talking (echo buffer). */
+const ECHO_RESUME_DELAY_MS = 300;
+/** Delay before retrying recognition after a transient error. */
+const ERROR_RETRY_DELAY_MS = 500;
 
 /**
- * Minimal shape of the Web Speech API recognition object. Typed locally because
- * `SpeechRecognition` is not part of the standard DOM lib typings.
- */
-interface SpeechRecognitionLike {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((event: SpeechRecognitionResultEventLike) => void) | null;
-  onend: (() => void) | null;
-  onerror: ((event: { error: string }) => void) | null;
-}
-
-interface SpeechRecognitionResultEventLike {
-  resultIndex: number;
-  results: ArrayLike<ArrayLike<{ transcript: string }>>;
-}
-
-type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
-
-/**
- * Continuous speech-to-text for the cooking screen (Web Speech API).
+ * Continuous speech-to-text layer for the cooking screen.
  *
- * Owns only the microphone and phrase→command mapping. The owning component
- * (Yael, M11) wires the emitted commands to navigation and pauses listening
- * while TTS is active (echo guard) via {@link pauseListening}/{@link resumeListening}.
+ * Listens for a small set of navigation commands (stop / continue / previous /
+ * next) in Hebrew and English via the Web Speech API and forwards them to the
+ * owning component through {@link attach}. While the app is reading a step aloud
+ * (`isTtsActive`) the microphone is muted to avoid the app hearing its own
+ * voice (echo guard).
  *
- * Recognition is Chromium-only; {@link supported} lets the UI hide voice controls
- * when unavailable.
+ * Provided at the component level (like {@link CookingTtsService}); the host is
+ * responsible for calling {@link destroy} on teardown.
  */
 @Injectable()
 export class CookingSttService {
   private translate = inject(TranslateService);
+  private injector = inject(Injector);
 
-  private readonly recognitionCtor: SpeechRecognitionCtor | null = this.resolveCtor();
+  private readonly SpeechRecognitionCtor: SpeechRecognitionConstructor | null =
+    typeof window !== 'undefined'
+      ? (window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null)
+      : null;
+
   private recognition: SpeechRecognitionLike | null = null;
+  private handlers: CookingSttHandlers | null = null;
+  private echoEffect: EffectRef | null = null;
+  private restartTimer: ReturnType<typeof setTimeout> | null = null;
+  /** True while a `stop()`/`abort()` we triggered is in flight, so `onend` won't restart. */
+  private suppressRestart = false;
 
-  /** True while the user has voice control enabled (independent of transient mutes). */
-  private enabled = false;
-  /** True while listening is temporarily suspended (e.g. during TTS playback). */
-  private muted = false;
-
-  private onCommand: ((command: CookingVoiceCommand) => void) | null = null;
-
+  private readonly _enabled = signal(false);
   private readonly _listening = signal(false);
-  /** True while the microphone is actively capturing audio. */
+  private readonly _pausedForEcho = signal(false);
+
+  /** Whether the browser exposes the Web Speech recognition API. */
+  readonly supported = this.SpeechRecognitionCtor !== null;
+  /** True when the user has switched voice commands on. */
+  readonly enabled = this._enabled.asReadonly();
+  /** True while a recognition session is actively running. */
   readonly listening = this._listening.asReadonly();
+  /** True while the mic is muted because the app is talking (echo guard). */
+  readonly pausedForEcho = this._pausedForEcho.asReadonly();
 
-  /** Whether the current browser exposes the Web Speech recognition API. */
-  readonly supported = this.recognitionCtor !== null;
+  /** Convenience state for the UI indicator: on / muted-by-echo / off. */
+  readonly indicator = computed<'active' | 'paused-echo' | 'off'>(() => {
+    if (!this._enabled()) {
+      return 'off';
+    }
+    return this._pausedForEcho() ? 'paused-echo' : 'active';
+  });
 
   /**
-   * Begin listening and route recognized commands to `handler`.
-   * No-op when recognition is unsupported.
+   * Wire the service to its host. Sets up the echo guard on `isTtsActive` and
+   * stores the command callbacks. Safe to call once from the component's
+   * `ngOnInit`.
    */
-  start(handler: (command: CookingVoiceCommand) => void): void {
-    if (!this.supported) {
+  attach(handlers: CookingSttHandlers): void {
+    this.handlers = handlers;
+
+    this.echoEffect?.destroy();
+    this.echoEffect = effect(
+      () => {
+        const talking = handlers.isTtsActive();
+        if (talking) {
+          this.pauseForEcho();
+        } else {
+          this.resumeAfterEcho();
+        }
+      },
+      { injector: this.injector },
+    );
+  }
+
+  /** Turn voice commands on/off. Returns the new enabled state. */
+  toggle(): boolean {
+    if (this._enabled()) {
+      this.disable();
+    } else {
+      this.enable();
+    }
+    return this._enabled();
+  }
+
+  /** Turn voice commands on and begin listening (no-op if unsupported). */
+  enable(): void {
+    if (!this.supported || this._enabled()) {
       return;
     }
-    this.onCommand = handler;
-    this.enabled = true;
-    this.muted = false;
-    this.launch();
+    this._enabled.set(true);
+    this._pausedForEcho.set(false);
+    this.start();
   }
 
-  /** Stop listening entirely and release the recognition instance. */
-  stop(): void {
-    this.enabled = false;
-    this.muted = false;
-    this.onCommand = null;
-    this.teardown();
-  }
-
-  /** Whether voice control is currently enabled by the user. */
-  isEnabled(): boolean {
-    return this.enabled;
+  /** Turn voice commands off and stop listening. */
+  disable(): void {
+    if (!this._enabled()) {
+      return;
+    }
+    this._enabled.set(false);
+    this._pausedForEcho.set(false);
+    this.stop();
   }
 
   /**
-   * Temporarily suspend capture without disabling voice control. Used as the
-   * echo guard while the app is speaking (TTS active).
+   * Parse a raw transcript into a known command, or `null` if none match.
+   * Normalizes case, punctuation and whitespace, then matches whole words
+   * (or multi-word phrases) so a longer utterance like "ok next please" still
+   * resolves to `next`.
    */
-  pauseListening(): void {
-    if (!this.enabled || this.muted) {
-      return;
+  parseCommand(transcript: string): CookingVoiceCommand | null {
+    const normalized = this.normalize(transcript);
+    if (!normalized) {
+      return null;
     }
-    this.muted = true;
-    this.teardown();
+    const words = normalized.split(' ');
+
+    // First pass: multi-word phrases (more specific).
+    for (const [command, aliases] of COMMAND_ALIASES) {
+      for (const alias of aliases) {
+        if (alias.includes(' ') && normalized.includes(alias)) {
+          return command;
+        }
+      }
+    }
+    // Second pass: single-word aliases.
+    for (const [command, aliases] of COMMAND_ALIASES) {
+      for (const alias of aliases) {
+        if (!alias.includes(' ') && words.includes(alias)) {
+          return command;
+        }
+      }
+    }
+    return null;
   }
 
-  /** Resume capture after a {@link pauseListening}, if voice control is still on. */
-  resumeListening(): void {
-    if (!this.enabled || !this.muted) {
-      return;
-    }
-    this.muted = false;
-    this.launch();
+  /** Tear down recognition, the echo effect and any pending timers. */
+  destroy(): void {
+    this.clearRestartTimer();
+    this.echoEffect?.destroy();
+    this.echoEffect = null;
+    this.suppressRestart = true;
+    this.teardownRecognition();
+    this.handlers = null;
+    this._enabled.set(false);
+    this._listening.set(false);
+    this._pausedForEcho.set(false);
   }
 
-  private launch(): void {
-    if (!this.recognitionCtor || !this.enabled || this.muted || this.recognition) {
+  private start(): void {
+    if (!this.SpeechRecognitionCtor || !this._enabled() || this._pausedForEcho()) {
+      return;
+    }
+    if (this._listening()) {
       return;
     }
 
-    const recognition = new this.recognitionCtor();
-    recognition.lang = this.resolveLang();
+    const recognition = new this.SpeechRecognitionCtor();
     recognition.continuous = true;
     recognition.interimResults = false;
+    recognition.lang = this.resolveLang();
 
     recognition.onresult = (event) => this.handleResult(event);
-    recognition.onerror = (event) => this.handleError(event.error);
     recognition.onend = () => this.handleEnd();
+    recognition.onerror = (event) => this.handleError(event);
 
     this.recognition = recognition;
-    this._listening.set(true);
+    this.suppressRestart = false;
     try {
       recognition.start();
+      this._listening.set(true);
     } catch {
-      // start() throws if called while already starting; ignore and let onend recover.
+      // start() throws if a session is already active; treat as already-listening.
+      this._listening.set(true);
     }
   }
 
-  private teardown(): void {
+  private stop(): void {
+    this.clearRestartTimer();
+    this.suppressRestart = true;
+    this.teardownRecognition();
     this._listening.set(false);
-    const recognition = this.recognition;
-    if (!recognition) {
+  }
+
+  private handleResult(event: SpeechRecognitionEventLike): void {
+    const results = event.results;
+    if (!results?.length) {
       return;
     }
-    this.recognition = null;
-    recognition.onresult = null;
-    recognition.onerror = null;
-    recognition.onend = null;
-    try {
-      recognition.abort();
-    } catch {
-      // abort() can throw if recognition never started; safe to ignore.
-    }
-  }
-
-  private handleResult(event: SpeechRecognitionResultEventLike): void {
-    for (let i = event.resultIndex; i < event.results.length; i += 1) {
-      const transcript = event.results[i]?.[0]?.transcript;
-      if (!transcript) {
-        continue;
-      }
-      const command = this.matchCommand(transcript.toLowerCase());
-      if (command) {
-        this.onCommand?.(command);
-        return;
-      }
-    }
-  }
-
-  private handleError(error: string): void {
-    // "no-speech"/"aborted" are expected during pauses; only a fatal error stops us.
-    if (error === 'not-allowed' || error === 'service-not-allowed') {
-      this.stop();
+    const transcript = results[results.length - 1]?.[0]?.transcript ?? '';
+    const command = this.parseCommand(transcript);
+    if (command) {
+      this.dispatch(command);
     }
   }
 
   private handleEnd(): void {
     this._listening.set(false);
-    this.recognition = null;
-    // The API auto-stops after silence; relaunch to keep listening continuously.
-    if (this.enabled && !this.muted) {
-      this.launch();
+    // Chrome ends a continuous session after silence; restart if still active.
+    if (this._enabled() && !this._pausedForEcho() && !this.suppressRestart) {
+      this.scheduleRestart(0);
     }
   }
 
-  private matchCommand(transcript: string): CookingVoiceCommand | null {
-    const lang = this.translate.currentLang() ?? 'he';
-    const table = PHRASES[lang] ?? PHRASES['he'];
-    const commands: CookingVoiceCommand[] = ['next', 'previous', 'stop', 'continue'];
-    for (const command of commands) {
-      if (table[command].some((phrase) => transcript.includes(phrase))) {
-        return command;
-      }
+  private handleError(event: SpeechRecognitionErrorLike): void {
+    this._listening.set(false);
+    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      // Permission denied — turn the feature off rather than looping.
+      this._enabled.set(false);
+      this.suppressRestart = true;
+      return;
     }
-    return null;
+    if (event.error === 'aborted') {
+      return;
+    }
+    if (this._enabled() && !this._pausedForEcho()) {
+      this.scheduleRestart(ERROR_RETRY_DELAY_MS);
+    }
+  }
+
+  private dispatch(command: CookingVoiceCommand): void {
+    const handlers = this.handlers;
+    if (!handlers) {
+      return;
+    }
+    switch (command) {
+      case 'stop':
+        handlers.onStop();
+        break;
+      case 'continue':
+        handlers.onContinue();
+        break;
+      case 'previous':
+        handlers.onPrevious();
+        break;
+      case 'next':
+        handlers.onNext();
+        break;
+    }
+  }
+
+  private pauseForEcho(): void {
+    if (this._pausedForEcho()) {
+      return;
+    }
+    this._pausedForEcho.set(true);
+    this.clearRestartTimer();
+    this.suppressRestart = true;
+    this.teardownRecognition();
+    this._listening.set(false);
+  }
+
+  private resumeAfterEcho(): void {
+    if (!this._pausedForEcho()) {
+      return;
+    }
+    this._pausedForEcho.set(false);
+    if (this._enabled()) {
+      this.scheduleRestart(ECHO_RESUME_DELAY_MS);
+    }
+  }
+
+  private scheduleRestart(delayMs: number): void {
+    this.clearRestartTimer();
+    this.restartTimer = setTimeout(() => {
+      this.restartTimer = null;
+      this.start();
+    }, delayMs);
+  }
+
+  private clearRestartTimer(): void {
+    if (this.restartTimer !== null) {
+      clearTimeout(this.restartTimer);
+      this.restartTimer = null;
+    }
+  }
+
+  private teardownRecognition(): void {
+    const recognition = this.recognition;
+    if (!recognition) {
+      return;
+    }
+    recognition.onresult = null;
+    recognition.onend = null;
+    recognition.onerror = null;
+    try {
+      recognition.abort();
+    } catch {
+      // abort() may throw if never started; safe to ignore.
+    }
+    this.recognition = null;
+  }
+
+  private normalize(transcript: string): string {
+    if (!transcript) {
+      return '';
+    }
+    return transcript
+      .toLowerCase()
+      .normalize('NFKC')
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   private resolveLang(): string {
     const lang = this.translate.currentLang() ?? 'he';
     return LANG_MAP[lang] ?? LANG_MAP['he'];
   }
+}
 
-  private resolveCtor(): SpeechRecognitionCtor | null {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-    const w = window as unknown as {
-      SpeechRecognition?: SpeechRecognitionCtor;
-      webkitSpeechRecognition?: SpeechRecognitionCtor;
-    };
-    return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+// --- Minimal Web Speech API typings (not in the standard DOM lib) ------------
+
+interface SpeechRecognitionAlternativeLike {
+  transcript: string;
+}
+
+type SpeechRecognitionResultLike = ArrayLike<SpeechRecognitionAlternativeLike>;
+
+interface SpeechRecognitionEventLike {
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+
+interface SpeechRecognitionErrorLike {
+  error: string;
+}
+
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: SpeechRecognitionErrorLike) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
   }
 }
