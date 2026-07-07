@@ -1,0 +1,40 @@
+<button class="agent-fab" (click)="toggle()" aria-label="פתח עוזר מתכונים">
+    💬
+  </button>
+  
+  @if (isOpen()) {
+    <div class="agent-panel">
+      <header class="agent-panel__header">
+        <span>עוזר המתכונים</span>
+        <button (click)="toggle()" aria-label="סגור">✕</button>
+      </header>
+  
+      <div class="agent-panel__messages">
+        @for (msg of chatService.messages(); track $index) {
+          <div class="agent-msg" [class.agent-msg--user]="msg.role === 'user'">
+            {{ msg.text }}
+          </div>
+        }
+        @if (chatService.isLoading()) {
+          <div class="agent-msg agent-msg--loading">חושב...</div>
+        }
+      </div>
+  
+      <footer class="agent-panel__footer">
+        <label class="agent-panel__attach">
+          📎
+          <input type="file" accept=".pdf,.docx,image/*" (change)="onFileSelected($event)" hidden />
+        </label>
+  
+        <input
+          type="text"
+          [ngModel]="inputText()"
+          (ngModelChange)="inputText.set($event)"
+          (keydown.enter)="send()"
+          placeholder="שאלי אותי על המתכונים שלך..."
+        />
+  
+        <button (click)="send()">שלח</button>
+      </footer>
+    </div>
+  }

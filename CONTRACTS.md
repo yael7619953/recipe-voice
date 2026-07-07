@@ -19,7 +19,8 @@ Update this file whenever an endpoint shape changes.
 5. [Recipes — `/recipes`](#5-recipes--recipes)
 6. [AI Import — `/ai`](#6-ai-import--ai)
 7. [Voice — `/voice`](#7-voice--voice)
-8. [Health Check](#8-health-check)
+8. [Agent — `/agent`](#8-agent--agent)
+9. [Health Check](#9-health-check)
 
 ---
 
@@ -39,7 +40,7 @@ Every query/mutation on user-owned resources **must** filter by `userId`.
 | Route group | Auth required |
 | ----------- | ------------- |
 | `/auth/register`, `/auth/login`, `/auth/google*` | No |
-| `/categories`, `/recipes`, `/ai`, `/voice` | Yes |
+| `/categories`, `/recipes`, `/ai`, `/voice`, `/agent` | Yes |
 | `GET /` (root) | No |
 
 ### Content Types
@@ -197,6 +198,17 @@ type RecipeDraft = Omit<Recipe, '_id' | 'userId' | 'createdAt'>;
 interface AuthTokenResponse {
   token: string;             // JWT, expires per server config (e.g. 7d)
   user: User;
+}
+```
+
+### ChatMessage
+
+Conversation turn for the agent chat endpoint.
+
+```typescript
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 ```
 
@@ -614,7 +626,80 @@ Classify a **short** audio clip as a cooking voice command (fallback for cooking
 
 ---
 
-## 8. Health Check
+## 8. Agent — `/agent`
+
+All routes require JWT.
+
+Conversational agent for recipe-related tasks (search, create, import from file, etc.).
+
+### `POST /agent/chat`
+
+Send a user message and receive an agent reply. Optionally attach a file (PDF, image, or Word `.docx`) for context or import.
+
+**Request (no file):** `application/json`
+
+```json
+{
+  "message": "Find my chocolate cake recipes",
+  "history": [
+    { "role": "user", "content": "Hi" },
+    { "role": "assistant", "content": "Hello! How can I help with your recipes?" }
+  ]
+}
+```
+
+| Field | Type | Rules |
+| ----- | ---- | ----- |
+| `message` | string | required |
+| `history` | `ChatMessage[]` | optional; prior turns (oldest first) |
+
+**Request (with file):** `multipart/form-data`
+
+| Field | Type | Rules |
+| ----- | ---- | ----- |
+| `message` | string | required |
+| `history` | string | optional; JSON-stringified `ChatMessage[]` |
+| `file` | file | optional; PDF / image (jpg, png, webp, …) / `.docx`; max size per `UPLOAD_MAX_FILE_SIZE` |
+
+**Headers:** `Authorization: Bearer <token>` (required)
+
+**Response `200`:**
+
+```typescript
+interface AgentChatResponse {
+  reply: string;
+  toolCalled?: string;       // e.g. "search_recipes", "create_recipe", "extract_recipe"
+  data?: object;             // tool-specific payload when toolCalled is set
+}
+```
+
+```json
+{
+  "reply": "I found 2 chocolate cake recipes in your collection.",
+  "toolCalled": "search_recipes",
+  "data": {
+    "items": [
+      { "_id": "664a1b2c3d4e5f6789012345", "title": "Chocolate Cake" }
+    ]
+  }
+}
+```
+
+When no tool is invoked, `toolCalled` and `data` are omitted.
+
+**Errors:**
+
+| Code | Condition |
+| ---- | --------- |
+| `400` | Missing `message` or invalid `history` JSON |
+| `415` | Unsupported file type |
+| `422` | File content is blank / unreadable |
+| `502` | LLM or upstream service failure |
+| `503` | Agent / API key not configured on the server |
+
+---
+
+## 9. Health Check
 
 ### `GET /`
 
@@ -661,3 +746,4 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-21 | AI import provider switched from OpenAI to Gemini (`GEMINI_API_KEY`); voice/STT still planned as Whisper |
 | 2026-06-21 | `GET /recipes?category=` — includes recipes in descendant subcategories of the filtered category |
 | 2026-07-02 | `POST /ai/extract` — clarify that `timer.duration` in the response is in minutes; wizard converts to seconds (× 60) before saving via `POST /recipes` |
+| 2026-07-07 | Add section 8 `POST /agent/chat` — conversational agent with optional file upload; add shared type `ChatMessage` |
