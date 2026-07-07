@@ -6,7 +6,7 @@ export const postChat = asyncHandler(async (req, res) => {
   const parsedHistory = history ? JSON.parse(history) : [];
 
   const result = await chat({
-    userId: req.user.id,
+    userId: req.userId,
     message,
     history: parsedHistory,
     file: req.file, // present only if a file was attached (multer)

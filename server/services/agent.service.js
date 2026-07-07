@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppError } from '../middleware/error.middleware.js';
-import { toolDeclarations, executeTool, extractAndCreateRecipeFromFile } from './agentTools.registry.js';
+import { toolDeclarations, executeTool, extractAndCreateRecipeFromFile } from './agent-tools.service.js';
 
 const MODEL = 'gemini-2.5-flash';
 
