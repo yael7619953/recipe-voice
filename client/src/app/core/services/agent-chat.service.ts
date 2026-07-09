@@ -14,12 +14,13 @@ export class AgentChatService {
   async sendMessage(text: string, file?: File): Promise<void> {
     console.log('🟦 [client] sendMessage called with:', text, file);
 
+    const prior = this.messages();
     this.messages.update((msgs) => [...msgs, { role: 'user', text }]);
     this.isLoading.set(true);
 
     const form = new FormData();
     form.append('message', text);
-    form.append('history', JSON.stringify(this.messages()));
+    form.append('history', JSON.stringify(prior));
     form.append('language', this.languageService.currentLang());
     if (file) form.append('file', file);
 
@@ -36,8 +37,17 @@ export class AgentChatService {
         ...msgs,
         { role: 'assistant', text: res!.reply },
       ]);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('🔴 [client] request FAILED:', err);
+      const httpErr = err as { error?: { message?: string }; message?: string };
+      const msg =
+        httpErr?.error?.message ||
+        httpErr?.message ||
+        'Something went wrong. Please try again.';
+      this.messages.update((msgs) => [
+        ...msgs,
+        { role: 'assistant', text: msg },
+      ]);
     } finally {
       this.isLoading.set(false);
     }
