@@ -118,19 +118,24 @@ export const toolDeclarations = [
     },
   },
   {
-    name: 'createCategory',
-    description: 'Create a new category, optionally nested under a parent category',
-    parameters: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        color: { type: 'string' },
-        icon: { type: 'string' },
-        parentCategory: { type: 'string' },
-      },
-      required: ['name'],
+
+  name: 'createCategory',
+  description:
+    'Create a new category, optionally nested under a parent category. ' +
+    'color and icon are optional — if the user did not specify them, ' +
+    'omit these arguments entirely and let the server apply sensible defaults. ' +
+    'Do not ask the user to choose a color or icon unless they want to customize it themselves.',
+  parameters: {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      color: { type: 'string', description: 'Optional. Omit to use the default category color.' },
+      icon: { type: 'string', description: 'Optional. Omit to use the default category icon.' },
+      parentCategory: { type: 'string' },
     },
+    required: ['name'],
   },
+},
   {
     name: 'updateCategory',
     description: 'Update an existing category (name, color, icon, or move it under a different parent)',
