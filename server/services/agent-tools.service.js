@@ -144,13 +144,21 @@ export const toolDeclarations = [
       'Extract a structured recipe from the file attached to the current user message (PDF, Word .docx, or image of a recipe) ' +
       'and save it as a new recipe. Only call when the user clearly wants to import/save a recipe from the file ' +
       'and the file content looks like a recipe. Do not call for unrelated files or for food photos meant only as a cover image ' +
-      '(use attachRecipeImage for that). Requires a file on this turn. Takes no arguments.',
+      '(use attachRecipeImage for that). Requires a file on this turn. ' +
+      'If the user also wants this recipe placed in a specific category, resolve its id (via listCategories/getCategoryDetails) and pass it in ' +
+      'the "categories" argument of this SAME call — do not use createRecipe for a file import, since createRecipe cannot read the file ' +
+      'and would force you to either invent content or leave the recipe empty.',
     parameters: {
       type: 'object',
       properties: {
         confirm: {
           type: 'boolean',
           description: 'Must be true to confirm extraction from the attached file',
+        },
+        categories: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Category ids to attach the extracted recipe to, resolved from the names the user mentioned (if any)',
         },
       },
       required: ['confirm'],
@@ -386,6 +394,7 @@ export async function executeTool(name, args, userId, file = null) {
         file.path,
         file.mimetype,
         file.originalname,
+        args.categories,
       );
     }
     case 'toggleFavorite':
@@ -412,7 +421,17 @@ export async function executeTool(name, args, userId, file = null) {
   }
 }
 
-export async function extractAndCreateRecipeFromFile(userId, filePath, mimeType, originalName) {
+export async function extractAndCreateRecipeFromFile(
+  userId,
+  filePath,
+  mimeType,
+  originalName,
+  categories,
+) {
   const extracted = await aiService.extractRecipeFromFile(filePath, mimeType, originalName);
-  return recipeService.create(userId, { ...extracted, isFavorite: false });
+  return recipeService.create(userId, {
+    ...extracted,
+    categories: categories?.length ? categories : extracted.categories,
+    isFavorite: false,
+  });
 }

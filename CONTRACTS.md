@@ -748,3 +748,4 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-07-02 | `POST /ai/extract` — clarify that `timer.duration` in the response is in minutes; wizard converts to seconds (× 60) before saving via `POST /recipes` |
 | 2026-07-07 | Add section 8 `POST /agent/chat` — conversational agent with optional file upload; add shared type `ChatMessage` |
 | 2026-07-10 | Category `icon` — corrected doc to reflect real format (single emoji character, not an icon key); `PUT /categories/:id` is now a true partial update (omitted fields keep their current value) |
+| 2026-07-10 | Agent chat — `extractRecipeFromFile` tool now accepts an optional `categories` array so a file-based recipe can be extracted and filed under a category in one call (previously the agent had to fall back to the plain create tool, which can't read the file, leaving the recipe empty) |
