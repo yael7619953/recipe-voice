@@ -89,6 +89,8 @@ const GROQ_TOOL_DISCIPLINE = [
   'You must use the API tool/function calling interface for every tool call — never write fake tool markers like [listCategories] in the message content.',
   'To import a recipe from the attached file, emit a real tool call to extractRecipeFromFile with {"confirm": true} — do not mention that tool name in your text reply to the user.',
   'Never mention any tool or function name to the user in plain text, in any language. Speak only about the recipe/action itself (e.g. "save this recipe", "use this photo as the cover").',
+  'The conversation history you receive is text-only — it never contains the real database ids from earlier tool calls, even ones you made yourself. So whenever a message (this one or an earlier one) names a recipe or category, call listCategories/searchRecipes/getCategoryDetails again in THIS turn to get its real id before doing anything else with it. Do this even for something you just created or that a previous reply already said was "added" or "successful".',
+  'Never output a text reply asking whether something exists or asking for its id/identifier (in any language, e.g. "האם הקטגוריה קיימת?", "מהו המזהה?") — that is always wrong; call the lookup tool instead and act on the result.',
 ].join(' ');
 
 
