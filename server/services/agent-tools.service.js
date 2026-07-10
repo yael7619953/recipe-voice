@@ -203,7 +203,10 @@ export const toolDeclarations = [
   },
   {
     name: 'createCategory',
-    description: 'Create a new category, optionally nested under a parent category',
+    description:
+      'Create a new category, optionally nested under a parent category. ' +
+      'color and icon are optional — if the user did not specify them, omit these arguments entirely ' +
+      'and let the server apply sensible defaults. Do not ask the user to choose a color or icon unless they want to customize it themselves.',
     parameters: {
       type: 'object',
       properties: {
@@ -211,13 +214,13 @@ export const toolDeclarations = [
         color: {
           type: 'string',
           description:
-            'Hex color code in "#RRGGBB" format (e.g. "#e53935" for red). ' +
+            'Optional — omit to use the default category color. When provided, must be a hex color code in "#RRGGBB" format (e.g. "#e53935" for red). ' +
             'If the user names a color in words (e.g. "orange", "כתום"), pick a well-known hex value for that color yourself — never pass the color name as text.',
         },
         icon: {
           type: 'string',
           description:
-            'A single emoji character that visually represents the category (e.g. "🍕" for pizza, "🍰" for desserts). ' +
+            'Optional — omit to use the default category icon. When provided, must be a single emoji character that visually represents the category (e.g. "🍕" for pizza, "🍰" for desserts). ' +
             'Never pass an icon library name, a CSS class, or a plain-text word — always an actual emoji glyph.',
         },
         parentCategory: { type: 'string', description: 'Parent category id, or omit to create it as a root category' },
