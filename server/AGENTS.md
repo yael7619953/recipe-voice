@@ -15,7 +15,8 @@ Verify the app boots before proposing a merge.
 
 ## Environment
 
-Copy `.env.example` → `.env`. Required: `MONGO_URI`, `JWT_SECRET`, Google OAuth keys, LLM keys.
+Copy `.env.example` → `.env`. Required: `MONGO_URI`, `JWT_SECRET`, Google OAuth keys, and the API key for the active LLM provider.
+LLM: set `AI_PROVIDER` to `gemini` (default) or `groq`, plus `GEMINI_API_KEY` and/or `GROQ_API_KEY`. Both keys may be present; only the active provider is used.
 `config/db.js` falls back to `mongodb://localhost:27017/recipeDB` when `MONGO_URI` is unset.
 **Never commit secrets** — use `.env` locally and GitHub Secrets in CI.
 
@@ -28,13 +29,14 @@ server/
   models/              user, category, recipe (lowercase refs)
   controllers/         thin req/res — wrap every handler with asyncHandler
   services/            business logic (framework-agnostic)
+    llm/               AI_PROVIDER adapters (gemini, groq) — agent + extract
   routes/index.js      register all routers → app.use('/api', routes)
   middleware/          auth, error, upload, validate
   validators/          Joi schemas per domain
   utils/               asyncHandler, jwt, recipeSchema
 ```
 
-Current API mounts: `/api/auth`, `/categories`, `/recipes`, `/ai` (+ `/health`).
+Current API mounts: `/api/auth`, `/categories`, `/recipes`, `/ai`, `/agent` (+ `/health`).
 
 ## Patterns
 
