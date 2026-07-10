@@ -198,6 +198,12 @@
       "save": "Saving the recipe failed. Please try again."
     }
   },
+  "agentChat": {
+    "errors": {
+      "empty": "Write a message or attach a file before sending",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
   "VALIDATION": {
     "REQUIRED": "Required field",
     "EMAIL": "Invalid email address",

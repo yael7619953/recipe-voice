@@ -12,7 +12,12 @@
       <div class="agent-panel__messages">
         @for (msg of chatService.messages(); track $index) {
           <div class="agent-msg" [class.agent-msg--user]="msg.role === 'user'">
-            {{ msg.text }}
+            @if (msg.attachmentName) {
+              <div class="agent-msg__attachment">📎 {{ msg.attachmentName }}</div>
+            }
+            @if (msg.text) {
+              <div>{{ msg.text }}</div>
+            }
           </div>
         }
         @if (chatService.isLoading()) {
@@ -20,10 +25,27 @@
         }
       </div>
   
+      @if (selectedFile(); as file) {
+        <div class="agent-panel__file-chip">
+          <span>📎 {{ file.name }}</span>
+          <button type="button" (click)="clearFile()" aria-label="הסר קובץ">✕</button>
+        </div>
+      }
+  
+      @if (sendError()) {
+        <div class="agent-panel__error">{{ sendError() }}</div>
+      }
+  
       <footer class="agent-panel__footer">
         <label class="agent-panel__attach">
           📎
-          <input type="file" accept=".pdf,.docx,image/*" (change)="onFileSelected($event)" hidden />
+          <input
+            #fileInput
+            type="file"
+            accept=".pdf,.docx,image/*"
+            (change)="onFileSelected($event)"
+            hidden
+          />
         </label>
   
         <input
