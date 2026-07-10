@@ -200,26 +200,52 @@ export const toolDeclarations = [
       type: 'object',
       properties: {
         name: { type: 'string' },
-        color: { type: 'string' },
-        icon: { type: 'string' },
-        parentCategory: { type: 'string' },
+        color: {
+          type: 'string',
+          description:
+            'Hex color code in "#RRGGBB" format (e.g. "#e53935" for red). ' +
+            'If the user names a color in words (e.g. "orange", "כתום"), pick a well-known hex value for that color yourself — never pass the color name as text.',
+        },
+        icon: {
+          type: 'string',
+          description:
+            'A single emoji character that visually represents the category (e.g. "🍕" for pizza, "🍰" for desserts). ' +
+            'Never pass an icon library name, a CSS class, or a plain-text word — always an actual emoji glyph.',
+        },
+        parentCategory: { type: 'string', description: 'Parent category id, or omit to create it as a root category' },
       },
       required: ['name'],
     },
   },
   {
     name: 'updateCategory',
-    description: 'Update an existing category (name, color, icon, or move it under a different parent)',
+    description:
+      'Partially update an existing category — only send the fields that should change (e.g. just color, or just icon). ' +
+      'Fields you omit are left untouched.',
     parameters: {
       type: 'object',
       properties: {
         id: { type: 'string' },
-        name: { type: 'string' },
-        color: { type: 'string' },
-        icon: { type: 'string' },
-        parentCategory: { type: 'string', description: 'New parent category id, or omit to make it a root category' },
+        name: { type: 'string', description: 'Omit to keep the current name' },
+        color: {
+          type: 'string',
+          description:
+            'Hex color code in "#RRGGBB" format (e.g. "#e53935" for red). Omit to keep the current color. ' +
+            'If the user names a color in words (e.g. "orange", "כתום"), pick a well-known hex value for that color yourself — never pass the color name as text.',
+        },
+        icon: {
+          type: 'string',
+          description:
+            'A single emoji character that visually represents the category (e.g. "🍕" for pizza, "🍰" for desserts). Omit to keep the current icon. ' +
+            'Never pass an icon library name, a CSS class, or a plain-text word — always an actual emoji glyph.',
+        },
+        parentCategory: {
+          type: 'string',
+          description:
+            'New parent category id to move it under. Omit to leave its current parent unchanged. Pass an empty string to detach it and make it a root category.',
+        },
       },
-      required: ['id', 'name'],
+      required: ['id'],
     },
   },
   {
@@ -279,6 +305,48 @@ function normalizeRecipeArgs(args) {
   return normalized;
 }
 
+const HEX_COLOR_RE = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+// Real emoji glyphs live outside the ASCII range; a pure-ASCII string means the
+// model sent a word/icon-name (e.g. "cake") instead of an actual emoji character.
+const ASCII_ONLY_RE = /^[\x00-\x7F]+$/;
+
+/**
+ * Category color/icon have no free-text meaning of their own — the model only
+ * learns their format from the tool description, so validate here and hand
+ * back a clear error it can react to instead of saving a bad value silently.
+ */
+function normalizeCategoryArgs(args) {
+  const normalized = { ...args };
+
+  if ('color' in normalized && normalized.color != null) {
+    const color = String(normalized.color).trim();
+    if (!HEX_COLOR_RE.test(color)) {
+      throw new AppError(
+        `Invalid color "${normalized.color}": must be a hex code like "#e53935", not a color name.`,
+        400,
+      );
+    }
+    normalized.color = color;
+  }
+
+  if ('icon' in normalized && normalized.icon != null) {
+    const icon = String(normalized.icon).trim();
+    if (!icon || ASCII_ONLY_RE.test(icon)) {
+      throw new AppError(
+        `Invalid icon "${normalized.icon}": must be a single emoji character (e.g. "🍕"), not an icon name or text.`,
+        400,
+      );
+    }
+    normalized.icon = icon;
+  }
+
+  if (normalized.parentCategory === '') {
+    normalized.parentCategory = null;
+  }
+
+  return normalized;
+}
+
 /**
  * @param {string} name
  * @param {object} args
@@ -332,9 +400,9 @@ export async function executeTool(name, args, userId, file = null) {
     case 'getCategoryDetails':
       return categoryService.getById(userId, args.id);
     case 'createCategory':
-      return categoryService.create(userId, args);
+      return categoryService.create(userId, normalizeCategoryArgs(args));
     case 'updateCategory':
-      return categoryService.update(userId, args.id, args);
+      return categoryService.update(userId, args.id, normalizeCategoryArgs(args));
     case 'deleteCategory':
       await categoryService.deleteById(userId, args.id);
       return { deleted: true };

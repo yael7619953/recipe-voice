@@ -125,8 +125,8 @@ interface User {
 interface Category {
   _id: string;
   name: string;
-  color: string;             // e.g. "#FF5733"
-  icon: string;              // icon key or URL
+  color: string;             // hex code, e.g. "#FF5733"
+  icon: string;              // single emoji character, e.g. "🍰"
   userId: string;
   parentCategory: string | null;
 }
@@ -330,7 +330,7 @@ List categories for the authenticated user.
     "_id": "664a1b2c3d4e5f6789012345",
     "name": "Desserts",
     "color": "#E91E63",
-    "icon": "cake",
+    "icon": "🍰",
     "userId": "664a00000000000000000001",
     "parentCategory": null,
     "children": []
@@ -358,7 +358,7 @@ List categories for the authenticated user.
 {
   "name": "Cakes",
   "color": "#9C27B0",
-  "icon": "birthday-cake",
+  "icon": "🎂",
   "parentCategory": "664a1b2c3d4e5f6789012345"
 }
 ```
@@ -366,8 +366,8 @@ List categories for the authenticated user.
 | Field | Type | Rules |
 | ----- | ---- | ----- |
 | `name` | string | required |
-| `color` | string | required |
-| `icon` | string | required |
+| `color` | string | required; hex code, e.g. `"#9C27B0"` |
+| `icon` | string | required; a single emoji character, e.g. `"🎂"` |
 | `parentCategory` | string \| null | optional; must belong to same user; no circular refs |
 
 **Response `201`:** `Category`
@@ -376,9 +376,9 @@ List categories for the authenticated user.
 
 ### `PUT /categories/:id`
 
-Full replace of mutable fields (`name`, `color`, `icon`, `parentCategory`).
+Partial update of mutable fields (`name`, `color`, `icon`, `parentCategory`) — a field left out of the body keeps its current value. To detach a category and make it a root category, send `parentCategory: null` explicitly.
 
-**Request body:** same shape as POST (all fields required except `parentCategory` may be `null`).
+**Request body:** any subset of the `POST` shape.
 
 **Response `200`:** `Category`
 
@@ -747,3 +747,4 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-21 | `GET /recipes?category=` — includes recipes in descendant subcategories of the filtered category |
 | 2026-07-02 | `POST /ai/extract` — clarify that `timer.duration` in the response is in minutes; wizard converts to seconds (× 60) before saving via `POST /recipes` |
 | 2026-07-07 | Add section 8 `POST /agent/chat` — conversational agent with optional file upload; add shared type `ChatMessage` |
+| 2026-07-10 | Category `icon` — corrected doc to reflect real format (single emoji character, not an icon key); `PUT /categories/:id` is now a true partial update (omitted fields keep their current value) |

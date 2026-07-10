@@ -93,9 +93,15 @@ export async function create(userId, data) {
 }
 
 export async function update(userId, id, data) {
-  await findOwnedCategory(userId, id);
+  const existing = await findOwnedCategory(userId, id);
 
-  const { name, color, icon, parentCategory = null } = data;
+  // Partial update: a field that isn't sent keeps its current value instead
+  // of being reset (e.g. omitting parentCategory must not detach the category).
+  const name = 'name' in data ? data.name : existing.name;
+  const color = 'color' in data ? data.color : existing.color;
+  const icon = 'icon' in data ? data.icon : existing.icon;
+  const parentCategory =
+    'parentCategory' in data ? data.parentCategory || null : existing.parentCategory;
 
   await validateParentCategory(userId, parentCategory);
   await assertNoCircularRef(userId, id, parentCategory);
