@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -6,6 +6,7 @@ import { Category, CategoryDraft, CategoryTreeNode } from '../../../core/models/
 import { Recipe } from '../../../core/models/recipe.model';
 import { CategoryService } from '../../../core/services/category.service';
 import { RecipeService } from '../../../core/services/recipe.service';
+import { DataRefreshService } from '../../../core/services/data-refresh.service';
 import { CategoryTreeComponent } from '../category-tree/category-tree.component';
 import { CategoryFormComponent } from '../category-form/category-form.component';
 

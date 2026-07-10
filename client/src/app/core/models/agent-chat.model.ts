@@ -6,5 +6,6 @@ export interface ChatMessage {
   export interface AgentChatResponse {
     reply: string;
     toolCalled?: string;
+    toolsCalled?: string[];
     data?: unknown;
   }

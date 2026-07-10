@@ -135,12 +135,13 @@ export async function chat({ userId, message, history = [], file, language }) {
   let turn = await session.send(userParts);
   let lastTool = null;
   let lastData = null;
+  const toolsCalled = [];
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     if (!turn.toolCall) {
       const reply = turn.text ?? '';
       if (lastTool) {
-        return { reply, toolCalled: lastTool, data: lastData };
+        return { reply, toolCalled: lastTool, toolsCalled, data: lastData };
       }
       return { reply };
     }
@@ -167,12 +168,14 @@ export async function chat({ userId, message, history = [], file, language }) {
 
     lastTool = turn.toolCall.name;
     lastData = toolResult;
+    toolsCalled.push(lastTool);
     turn = await session.continueWithToolResult(turn.toolCall, toolResult);
   }
 
   return {
     reply: turn.text ?? '',
     toolCalled: lastTool,
+    toolsCalled,
     data: lastData,
   };
 }
