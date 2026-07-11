@@ -317,9 +317,9 @@ function normalizeRecipeArgs(args) {
 }
 
 const HEX_COLOR_RE = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
-// Real emoji glyphs live outside the ASCII range; a pure-ASCII string means the
-// model sent a word/icon-name (e.g. "cake") instead of an actual emoji character.
-const ASCII_ONLY_RE = /^[\x00-\x7F]+$/;
+// Real emoji glyphs live outside the printable-ASCII range; an all-printable-ASCII
+// string means the model sent a word/icon-name (e.g. "cake") instead of an actual emoji character.
+const ASCII_ONLY_RE = /^[\x20-\x7E]+$/;
 
 /**
  * Category color/icon have no free-text meaning of their own — the model only
