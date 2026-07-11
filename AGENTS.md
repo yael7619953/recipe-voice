@@ -20,7 +20,7 @@ cd server && npm install && npm run dev
 cd client && npm install && npm start
 ```
 
-Copy `server/.env.example` → `server/.env`. Required: `MONGO_URI`, `JWT_SECRET`, Google OAuth keys, LLM keys. **Never commit secrets.**
+Copy `server/.env.example` → `server/.env`. Required: `MONGO_URI`, `JWT_SECRET`, Google OAuth keys, and the key for the active LLM (`GEMINI_API_KEY` and/or `GROQ_API_KEY`; switch with `AI_PROVIDER`). **Never commit secrets.**
 
 ## Project
 
@@ -31,7 +31,7 @@ Recipe platform with hierarchical categories, a **voice kitchen assistant** (TTS
 | Server | Node.js ES Modules, Express 5, Mongoose 9, MongoDB |
 | Client | Angular 21 standalone, ngx-translate (Hebrew RTL + English LTR) |
 | Auth | JWT + bcrypt + Google OAuth |
-| AI/Voice | Whisper (STT), Web Speech API (TTS), LLM structured output |
+| AI/Voice | Whisper (STT), Web Speech API (TTS), LLM via `AI_PROVIDER` (`gemini` \| `groq`) |
 
 ## Layout
 

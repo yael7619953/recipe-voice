@@ -1,10 +1,11 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { CategoryService } from '../../../core/services/category.service';
+import { DataRefreshService } from '../../../core/services/data-refresh.service';
 import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
@@ -16,6 +17,7 @@ import { Recipe } from '../../../core/models/recipe.model';
 export class RecipesHomeComponent implements OnInit {
   private recipeService = inject(RecipeService);
   readonly categoryService = inject(CategoryService);
+  private dataRefresh = inject(DataRefreshService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
@@ -27,6 +29,16 @@ export class RecipesHomeComponent implements OnInit {
 
   searchQuery = signal('');
   selectedCategory = signal('');
+
+  constructor() {
+    // Reload when something outside this page (e.g. the AI agent) mutates a recipe.
+    effect(() => {
+      const version = this.dataRefresh.recipesVersion();
+      if (version > 0) {
+        this.loadPage(this.page());
+      }
+    });
+  }
 
   get hasActiveFilters(): boolean {
     return !!this.searchQuery() || !!this.selectedCategory();

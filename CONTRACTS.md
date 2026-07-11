@@ -125,8 +125,8 @@ interface User {
 interface Category {
   _id: string;
   name: string;
-  color: string;             // e.g. "#FF5733"
-  icon: string;              // icon key or URL
+  color: string;             // hex code, e.g. "#FF5733"
+  icon: string;              // single emoji character, e.g. "🍰"
   userId: string;
   parentCategory: string | null;
 }
@@ -330,7 +330,7 @@ List categories for the authenticated user.
     "_id": "664a1b2c3d4e5f6789012345",
     "name": "Desserts",
     "color": "#E91E63",
-    "icon": "cake",
+    "icon": "🍰",
     "userId": "664a00000000000000000001",
     "parentCategory": null,
     "children": []
@@ -358,7 +358,7 @@ List categories for the authenticated user.
 {
   "name": "Cakes",
   "color": "#9C27B0",
-  "icon": "birthday-cake",
+  "icon": "🎂",
   "parentCategory": "664a1b2c3d4e5f6789012345"
 }
 ```
@@ -366,8 +366,8 @@ List categories for the authenticated user.
 | Field | Type | Rules |
 | ----- | ---- | ----- |
 | `name` | string | required |
-| `color` | string | required |
-| `icon` | string | required |
+| `color` | string | required; hex code, e.g. `"#9C27B0"` |
+| `icon` | string | required; a single emoji character, e.g. `"🎂"` |
 | `parentCategory` | string \| null | optional; must belong to same user; no circular refs |
 
 **Response `201`:** `Category`
@@ -376,9 +376,9 @@ List categories for the authenticated user.
 
 ### `PUT /categories/:id`
 
-Full replace of mutable fields (`name`, `color`, `icon`, `parentCategory`).
+Partial update of mutable fields (`name`, `color`, `icon`, `parentCategory`) — a field left out of the body keeps its current value. To detach a category and make it a root category, send `parentCategory: null` explicitly.
 
-**Request body:** same shape as POST (all fields required except `parentCategory` may be `null`).
+**Request body:** any subset of the `POST` shape.
 
 **Response `200`:** `Category`
 
@@ -495,10 +495,20 @@ Owner: Shira (`ai.service.js`, `ai.controller.js`, `ai.routes.js`). All routes r
 ### `POST /ai/extract`
 
 Extract a structured recipe from an uploaded file (PDF, image, or Word `.docx`).
-The server reads the file, extracts its text (or uses Gemini Vision for images), calls
-Gemini structured output with the recipe schema, and returns the parsed recipe preview.
+The server reads the file, extracts its text (or uses vision for images), calls the
+active LLM provider (`AI_PROVIDER`: `gemini` or `groq`) for structured recipe JSON,
+and returns the parsed recipe preview.
 The file is **not** saved to the database — the client wizard (Yael, M15) displays
 the result for user review before saving via `POST /recipes`.
+
+**Server env (LLM):**
+
+| Variable | Rules |
+| -------- | ----- |
+| `AI_PROVIDER` | optional; `gemini` (default) or `groq` |
+| `GEMINI_API_KEY` | required when `AI_PROVIDER=gemini` |
+| `GROQ_API_KEY` | required when `AI_PROVIDER=groq` |
+| `GEMINI_MODEL` / `GROQ_MODEL` | optional model overrides |
 
 **Request:** `multipart/form-data`
 
@@ -550,8 +560,9 @@ absent in the source document.
 | `400` | No file uploaded |
 | `415` | Unsupported file type |
 | `422` | File content is blank / unreadable (empty PDF or Word document) |
-| `502` | Gemini API call failed (network, quota, timeout) |
-| `503` | `GEMINI_API_KEY` not configured on the server |
+| `429` | LLM quota / rate limit exceeded |
+| `502` | LLM API call failed (network, timeout, invalid JSON) |
+| `503` | Active provider API key not configured (`GEMINI_API_KEY` or `GROQ_API_KEY`) |
 
 ---
 
@@ -634,7 +645,8 @@ Conversational agent for recipe-related tasks (search, create, import from file,
 
 ### `POST /agent/chat`
 
-Send a user message and receive an agent reply. Optionally attach a file (PDF, image, or Word `.docx`) for context or import.
+Send a user message and receive an agent reply. Optionally attach a file (PDF, image, or Word `.docx`).
+The agent uses the same `AI_PROVIDER` as AI import (`gemini` or `groq`). It infers intent from natural language and file contents (no fixed command phrases). File tools: `extractRecipeFromFile` (PDF / Word / recipe-scan image → new recipe) and `attachRecipeImage` (image cover on an existing recipe, often after `searchRecipes`). If intent is unclear it asks; if the file is unrelated it refuses.
 
 **Request (no file):** `application/json`
 
@@ -652,6 +664,7 @@ Send a user message and receive an agent reply. Optionally attach a file (PDF, i
 | ----- | ---- | ----- |
 | `message` | string | required |
 | `history` | `ChatMessage[]` | optional; prior turns (oldest first) |
+| `language` | string | optional; `"he"` \| `"en"` (UI language). Forces the reply language — recommended over relying on the model to infer it from `message`. |
 
 **Request (with file):** `multipart/form-data`
 
@@ -660,6 +673,7 @@ Send a user message and receive an agent reply. Optionally attach a file (PDF, i
 | `message` | string | required |
 | `history` | string | optional; JSON-stringified `ChatMessage[]` |
 | `file` | file | optional; PDF / image (jpg, png, webp, …) / `.docx`; max size per `UPLOAD_MAX_FILE_SIZE` |
+| `language` | string | optional; `"he"` \| `"en"` (UI language). Forces the reply language, since file metadata/extracted text injected into the conversation may be in English. |
 
 **Headers:** `Authorization: Bearer <token>` (required)
 
@@ -668,7 +682,7 @@ Send a user message and receive an agent reply. Optionally attach a file (PDF, i
 ```typescript
 interface AgentChatResponse {
   reply: string;
-  toolCalled?: string;       // e.g. "search_recipes", "create_recipe", "extract_recipe"
+  toolCalled?: string;       // e.g. "searchRecipes", "attachRecipeImage", "extractRecipeFromFile"
   data?: object;             // tool-specific payload when toolCalled is set
 }
 ```
@@ -694,8 +708,9 @@ When no tool is invoked, `toolCalled` and `data` are omitted.
 | `400` | Missing `message` or invalid `history` JSON |
 | `415` | Unsupported file type |
 | `422` | File content is blank / unreadable |
+| `429` | LLM quota / rate limit exceeded |
 | `502` | LLM or upstream service failure |
-| `503` | Agent / API key not configured on the server |
+| `503` | Active provider API key not configured on the server |
 
 ---
 
@@ -747,3 +762,9 @@ Minimal claims (implementation in `server/utils/jwt.js`):
 | 2026-06-21 | `GET /recipes?category=` — includes recipes in descendant subcategories of the filtered category |
 | 2026-07-02 | `POST /ai/extract` — clarify that `timer.duration` in the response is in minutes; wizard converts to seconds (× 60) before saving via `POST /recipes` |
 | 2026-07-07 | Add section 8 `POST /agent/chat` — conversational agent with optional file upload; add shared type `ChatMessage` |
+| 2026-07-10 | Agent chat — file no longer auto-extracts; LLM sees file + message; tools `attachRecipeImage` and `extractRecipeFromFile` chosen by intent |
+| 2026-07-10 | Agent chat — map Gemini rate-limit to `429`; document quota error |
+| 2026-07-10 | LLM providers — `AI_PROVIDER=gemini\|groq`; adapters under `server/services/llm/`; both keys can coexist |
+| 2026-07-10 | `POST /agent/chat` — server now reads `language` field and forces reply language (was previously accepted but ignored) |
+| 2026-07-10 | Category `icon` — corrected doc to reflect real format (single emoji character, not an icon key); `PUT /categories/:id` is now a true partial update (omitted fields keep their current value) |
+| 2026-07-10 | Agent chat — `extractRecipeFromFile` tool now accepts an optional `categories` array so a file-based recipe can be extracted and filed under a category in one call (previously the agent had to fall back to the plain create tool, which can't read the file, leaving the recipe empty) |

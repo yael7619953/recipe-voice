@@ -86,6 +86,43 @@
       cursor: pointer;
       font-size: 20px;
     }
+  
+    &__file-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 12px;
+      padding: 6px 10px;
+      background: #eef3ff;
+      border: 1px solid #c9dbff;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #1f4fc4;
+  
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+  
+      button {
+        background: none;
+        border: none;
+        color: #1f4fc4;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0;
+        line-height: 1;
+      }
+    }
+  
+    &__error {
+      margin: 0 12px;
+      padding: 4px 10px;
+      color: #c0392b;
+      font-size: 12px;
+    }
   }
   
   .agent-msg {
@@ -106,5 +143,11 @@
     &--loading {
       opacity: 0.6;
       font-style: italic;
+    }
+  
+    &__attachment {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-bottom: 4px;
     }
   }

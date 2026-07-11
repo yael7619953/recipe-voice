@@ -1,79 +1,190 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import fs from 'fs';
+import path from 'path';
 import { AppError } from '../middleware/error.middleware.js';
-import { toolDeclarations, executeTool, extractAndCreateRecipeFromFile } from './agent-tools.service.js';
+import { extractDocxText, extractPdfText } from './ai.service.js';
+import { toolDeclarations, executeTool } from './agent-tools.service.js';
+import { getLlmProvider } from './llm/llm.provider.js';
 
-const MODEL = 'gemini-2.5-flash';
+const MAX_TOOL_ROUNDS = 5;
 
-const SYSTEM_PROMPT =
-  'You are the in-app assistant for a recipe manager. ' +
-  'Use the available tools to search, read, update or organize the user\'s own recipes and categories. ' +
-  'Never invent recipe data — always call a tool to fetch or change real data. ' +
-  'Reply in the same language the user wrote in.';
+const SYSTEM_PROMPT = [
+  'You are the in-app assistant for a recipe manager.',
+  'Use the available tools to search, read, update, or organize the user\'s own recipes and categories.',
+  'Never invent recipe data — always call a tool to fetch or change real data.',
+  'CRITICAL: whenever you are not fully sure what the user wants, are missing a piece of information you need, or cannot tell which tool (if any) matches their request — STOP and ask a short clarifying question in plain language instead of guessing.',
+  'Never fall back to "doing something" just to produce a result: do not call a different tool than the one the user actually needs, do not create or update a recipe/category with placeholder or incomplete data, and do not silently skip part of the request (e.g. the category the user asked for) hoping it is good enough. A wrong or half-done action is worse than asking one extra question.',
+  'This also applies mid-task: if after a tool call you are stuck (a lookup returned nothing usable, an error repeats, or you genuinely cannot proceed safely) — stop and explain the problem to the user in plain language and ask how they want to proceed, rather than retrying blindly or completing the action in a degraded way.',
+  'Reply in the same language the user wrote in.',
+  'IMPORTANT: this chat window has a real attach button (a paperclip icon next to the text input) that lets the user attach a PDF, Word document, or image directly to their message.',
+  'You are fully able to receive and process files/images this way — never tell the user that you cannot accept files, images, or photos, and never claim this capability does not exist.',
+  'If the user mentions they have a photo, scan, or written document of a recipe but has not attached anything yet in this turn, tell them to use the attach/paperclip button in this chat to send it (do not say to paste a description instead, unless they explicitly prefer to type the recipe as text).',
+  'Pasting the recipe as plain text is only an alternative for users who prefer typing — always mention the attach button as the primary way to send a photo or document.',
+  'CRITICAL: tool and function names (like searchRecipes, extractRecipeFromFile, attachRecipeImage, updateRecipe) are internal implementation details.',
+  'NEVER mention a tool/function name to the user, in any language, for any reason — not in questions, not in confirmations, not in explanations. The user must never see these identifiers.',
+  'Speak naturally instead: say "Do you want me to save this as a new recipe?" or "Should I use this photo as the cover for that recipe?" — never "I will use extractRecipeFromFile" or similar.',
+  'Database ids (recipe id, category id, etc.) are internal implementation details too — never ask the user for one, and never say things like "I need the category id" or "what is the id".',
+  'When a user refers to something by name (a recipe title, a category like "desserts"), resolve it yourself: call the relevant lookup tool (searchRecipes, listCategories, getCategoryDetails) first and use the id you get back — do not ask the user to supply or confirm an id.',
+  'You do NOT retain any internal id from earlier in this conversation, even for a category or recipe you yourself created or discussed a moment ago — never assume you remember it and never ask the user to confirm it exists or what its id is. In every turn, before acting on or replying about a named recipe/category, call the lookup tool again in that same turn to (re)resolve its id from its name.',
+  'This applies even when the user repeats or rephrases a request you already handled: silently re-resolve every name via the lookup tool and proceed — never respond with something like "does category X exist? what is its id?".',
+  'Only ask the user a clarifying question when the lookup genuinely returns more than one plausible match (e.g. two categories with a similar name) or no match at all — and phrase it in plain terms using the names, never mentioning ids or tools.',
+  'If a name the user gave has no match after searching, say so in plain language and ask them to confirm the exact name — still without mentioning ids.',
+  'A category\'s color must always be a hex code like "#e53935" — if the user names a color in words (e.g. "orange", "כתום", "ירוק בהיר"), silently pick a sensible well-known hex value for it yourself; never pass the color word as-is.',
+  'A category\'s icon must always be a single real emoji character (e.g. "🍕", "🍰", "🥗") that visually matches the category — never an icon library name, a CSS class, or a plain word like "pizza"; if the user just names a theme ("משהו עם פיצה"), pick a fitting emoji yourself.',
+  'When updating a category, only include the fields that should change (e.g. just color, or just icon) — omit the rest so they stay as they are; do not resend the name or move the category under a different parent unless the user asked for that.',
+  'Never narrate a plan of which tools you will call. Either call a tool via the function-calling interface, or reply to the user in plain natural language — never both in one step, and never describe the mechanism.',
+  'Do not manually copy ingredients or steps from an attached file into your reply when importing; call the extraction tool instead of retyping the recipe.',
+  'When the user attaches a file (PDF, Word document, or image), infer their intent from natural language and from the file contents — do not rely on fixed command phrases.',
+  'Typical intents include: extract a recipe from the file into a new recipe, or attach an image as the cover photo of an existing recipe.',
+  'Before acting on an attached file, judge what the file actually is:',
+  'a recipe document or scan (ingredients/steps text, handwritten or printed recipe card, screenshot of a recipe);',
+  'a food or dish photo suitable as a recipe cover;',
+  'or something unrelated to recipes or cooking.',
+  'For PDF and Word: if it is a recipe and the user wants it saved, call the extraction tool immediately (do not re-type the recipe, and do not tell the user which tool you are calling).',
+  'If the same message also asks to put the recipe in a specific category, resolve that category\'s id first (listCategories/getCategoryDetails) and pass it in the extraction tool\'s categories argument in that same call — never create the recipe with the plain "new recipe" tool instead, since that tool cannot read the file and would leave the recipe empty.',
+  'For images: a plated dish is usually a cover-photo candidate; a written/printed recipe is usually meant for extraction; unrelated images should be refused politely.',
+  'To set a cover photo on an existing recipe when the user uploaded an image this turn, look up the recipe by name first if needed, then attach the image — without naming any tool to the user.',
+  'If the intent is unclear (for example a file with little or no message), ask what they want before changing any data — you may briefly say what the file looks like to help them choose.',
+  'If the file is unrelated to recipes or cooking, explain that you cannot use it and do not invent a recipe from it.',
+  'Only call a mutating tool when the intent is clear enough; otherwise ask a short clarifying question.',
+].join(' ');
 
-function getModel() {
-  if (!process.env.GEMINI_API_KEY?.trim()) {
-    throw new AppError('AI service is not configured', 503);
+const LANGUAGE_NAMES = { he: 'Hebrew (עברית)', en: 'English' };
+
+/**
+ * Build a strong language directive from the client's UI language, so the model
+ * doesn't get confused by English text we inject for file metadata / extracted content.
+ */
+function languageDirective(language) {
+  const name = LANGUAGE_NAMES[language];
+  if (!name) return '';
+  return (
+    ` The user interface language is ${name}. Always reply to the user in ${name}, ` +
+    'no matter what language any attached file content, extracted text, or file metadata in this conversation is written in.'
+  );
+}
+
+/**
+ * Provider-agnostic user message parts (text + optional image).
+ * PDF/DOCX become extracted text; images become { type: 'image', ... }.
+ */
+async function buildUserParts(message, file) {
+  const userText = (message ?? '').trim();
+
+  if (!file) {
+    return [{ type: 'text', text: userText }];
   }
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim());
-  return genAI.getGenerativeModel({
-    model: MODEL,
-    systemInstruction: SYSTEM_PROMPT,
-    tools: [{ functionDeclarations: toolDeclarations }],
+
+  const uploadUrl = `/uploads/${file.filename}`;
+  const header =
+    (userText || '(The user attached a file with no text message.)') +
+    `\n\n[Attached file: "${file.originalname}" (${file.mimetype}). Stored at ${uploadUrl}.` +
+    ' Assess whether this is a recipe document/scan, a food photo for a recipe cover, or unrelated — then follow the user intent or ask if unclear.]';
+
+  const parts = [{ type: 'text', text: header }];
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const mime = file.mimetype || '';
+
+  if (mime.startsWith('image/')) {
+    const base64 = fs.readFileSync(file.path).toString('base64');
+    parts.push({ type: 'image', mimeType: mime, base64 });
+    return parts;
+  }
+
+  if (mime === 'application/pdf' || ext === '.pdf') {
+    const text = await extractPdfText(file.path);
+    parts.push({
+      type: 'text',
+      text:
+        'Extracted PDF text (use this to decide if it is a recipe or unrelated):\n\n' + text,
+    });
+    return parts;
+  }
+
+  if (
+    mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    ext === '.docx'
+  ) {
+    const text = await extractDocxText(file.path);
+    parts.push({
+      type: 'text',
+      text:
+        'Extracted Word document text (use this to decide if it is a recipe or unrelated):\n\n' +
+        text,
+    });
+    return parts;
+  }
+
+  parts.push({
+    type: 'text',
+    text: 'This file type cannot be previewed as text or image for the assistant.',
   });
+  return parts;
 }
 
-function toGeminiHistory(history) {
-  return history.map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.text }],
-  }));
+/** Drop a trailing user turn that duplicates the current message (client may include it). */
+function priorHistory(history, message) {
+  if (!Array.isArray(history) || history.length === 0) return [];
+  const last = history[history.length - 1];
+  const current = (message ?? '').trim();
+  if (last?.role === 'user' && (last.text ?? '').trim() === current) {
+    return history.slice(0, -1);
+  }
+  return history;
 }
 
-export async function chat({ userId, message, history = [], file }) {
-  // File attached → deterministic extract+create, bypassing tool-choice guesswork
-  if (file) {
-    const recipe = await extractAndCreateRecipeFromFile(
-      userId,
-      file.path,
-      file.mimetype,
-      file.originalname
-    );
-    return {
-      reply: `יצרתי טיוטת מתכון "${recipe.title}" מהקובץ שהעלית.`,
-      toolCalled: 'extractAndCreateRecipeFromFile',
-      data: recipe,
-    };
-  }
+export async function chat({ userId, message, history = [], file, language }) {
+  const llm = getLlmProvider();
+  const session = llm.createAgentChat({
+    systemPrompt: SYSTEM_PROMPT + languageDirective(language),
+    tools: toolDeclarations,
+    history: priorHistory(history, message),
+  });
 
-  const model = getModel();
-  const chatSession = model.startChat({ history: toGeminiHistory(history) });
+  const userParts = await buildUserParts(message, file);
+  let turn = await session.send(userParts);
+  let lastTool = null;
+  let lastData = null;
+  const toolsCalled = [];
 
-  const result = await chatSession.sendMessage(message);
-  const call = result.response.functionCalls()?.[0];
-
-  if (!call) {
-    return { reply: result.response.text() };
-  }
-
-  let toolResult;
-  try {
-    toolResult = await executeTool(call.name, call.args, userId);
-  } catch (err) {
-    if (err instanceof AppError) {
-      toolResult = { error: err.message };
-    } else {
-      throw err;
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    if (!turn.toolCall) {
+      const reply = turn.text ?? '';
+      if (lastTool) {
+        return { reply, toolCalled: lastTool, toolsCalled, data: lastData };
+      }
+      return { reply };
     }
-  }
 
-  // Send the tool result back so the model can phrase a natural reply
-  const followUp = await chatSession.sendMessage([
-    { functionResponse: { name: call.name, response: { result: toolResult } } },
-  ]);
+    let toolResult;
+    try {
+      toolResult = await executeTool(
+        turn.toolCall.name,
+        turn.toolCall.args,
+        userId,
+        file ?? null,
+      );
+    } catch (err) {
+      if (err instanceof AppError) {
+        toolResult = { error: err.message };
+      } else if (err.name === 'ValidationError' || err.name === 'CastError') {
+        // Feed schema mismatches back to the model instead of failing the whole
+        // request — it can fix the arguments and retry, or explain to the user.
+        toolResult = { error: `Invalid data: ${err.message}` };
+      } else {
+        throw err;
+      }
+    }
+
+    lastTool = turn.toolCall.name;
+    lastData = toolResult;
+    toolsCalled.push(lastTool);
+    turn = await session.continueWithToolResult(turn.toolCall, toolResult);
+  }
 
   return {
-    reply: followUp.response.text(),
-    toolCalled: call.name,
-    data: toolResult,
+    reply: turn.text ?? '',
+    toolCalled: lastTool,
+    toolsCalled,
+    data: lastData,
   };
 }
